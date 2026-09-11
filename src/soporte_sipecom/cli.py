@@ -122,6 +122,8 @@ def launch_dashboard(port: int) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw = list(argv) if argv is not None else sys.argv[1:]
+    raw = ["dashboard" if a == "dasboard" else a for a in raw]
     parser = argparse.ArgumentParser(
         prog="sipecom-soporte",
         description="SIPECOM-SOPORTE — CLI de soporte y dashboard Streamlit (puerto 2121).",
@@ -142,9 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("config", help="Mostrar config (puerto + agentes)")
     sub.add_parser("dashboard", help="Abrir la consola Streamlit (esta UI)")
     sub.add_parser("ui", help="Alias de dashboard")
-    sub.add_parser("dasboard", help=argparse.SUPPRESS)
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args(raw)
     port = args.port if args.port else load().get("port") or DEFAULT_PORT
 
     if args.cmd is None:
@@ -174,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"archivo: {config_path()}")
         return 0
 
-    if args.cmd in {"dashboard", "ui", "dasboard"}:
+    if args.cmd in {"dashboard", "ui"}:
         return launch_dashboard(port)
 
     parser.print_help()
