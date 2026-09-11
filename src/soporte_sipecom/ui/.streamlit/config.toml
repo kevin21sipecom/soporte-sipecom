@@ -7,11 +7,11 @@ headless = true
 gatherUsageStats = false
 
 [theme]
-base = "dark"
-primaryColor = "#7b8cff"
-backgroundColor = "#1c2233"
-secondaryBackgroundColor = "#232a3d"
-textColor = "#f2f4f8"
+base = "light"
+primaryColor = "#5b6ee8"
+backgroundColor = "#f7f8fb"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#2a3040"
 font = "sans serif"
 
 [client]

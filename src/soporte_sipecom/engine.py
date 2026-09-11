@@ -56,36 +56,23 @@ def origen_readme(origen: str) -> str:
 
 
 def build_prompt(proyecto: dict, pregunta: str, adjuntos: list[Path]) -> str:
-    mapa = proyecto.get("mapa") or ""
-    receta = proyecto.get("receta") or ""
     pack = proyecto.get("pack") or ""
     origen = proyecto.get("origen") or ""
-    mapas = proyecto.get("mapas") or ""
     adj = "\n".join(f"- {p}" for p in adjuntos) or "(ninguno)"
-    return f"""Responde en español sobre el proyecto. Eres el chef: conoces el corte y el código.
-No modifiques archivos, no ejecutes migraciones, no inventes endpoints ni UX.
-Si no está en el material de abajo, el pack o el origen, di que no está.
-Cita archivo:línea o IDs. Usa herramientas del CLI para leer más archivos. Sin API keys.
+    cg = which("codegraph") or "codegraph"
+    return f"""Responde en español, breve y citado, SOLO a esta consulta.
+No leas MAPA.md ni RECETA.md. El contexto es el código (origen), el pack Repomix y CodeGraph.
+No modifiques archivos. No inventes SOAP, endpoints ni pantallas.
+Si no está en origen/pack/grafo, dilo. Cita archivo:línea.
 
-Origen (código, lee lo que haga falta): {origen}
-Pack Repomix (búsqueda en todo el repo; NO lo vuelques): {pack}
-MAPA.md (puede no existir en multi-desposte): {mapa or "—"}
-RECETA.md: {receta or "—"}
-Diagramas: {mapas or "—"}
+Origen: {origen}
+Pack Repomix (grep/lee por path, no lo vuelques): {pack}
+CodeGraph CLI: {cg}  (query/explore sobre el origen)
 
-Adjuntos de esta consulta:
+Adjuntos:
 {adj}
 
---- README / AGENTS del origen ---
-{origen_readme(origen)}
-
---- MAPA.md ---
-{read_capped(mapa)}
-
---- RECETA.md ---
-{read_capped(receta)}
-
-Pregunta / texto:
+Consulta:
 {pregunta or "(sin texto; interpreta los adjuntos)"}
 """
 
@@ -139,7 +126,7 @@ def run_engine(
                 "bypassPermissions",
                 "--disable-web-search",
                 "--max-turns",
-                "10",
+                "4",
                 "--cwd",
                 origen,
             ]

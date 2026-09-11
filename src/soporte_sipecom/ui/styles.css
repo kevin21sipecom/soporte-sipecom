@@ -1,15 +1,15 @@
 :root {
-  --background: oklch(0.17 0.018 265);
-  --foreground: oklch(0.95 0.008 260);
-  --card: oklch(0.21 0.02 265);
-  --primary: oklch(0.68 0.14 266);
-  --primary-foreground: oklch(0.16 0.02 265);
-  --secondary: oklch(0.26 0.02 265);
-  --muted: oklch(0.24 0.018 265);
-  --muted-foreground: oklch(0.68 0.02 262);
-  --terminal: oklch(0.82 0.16 155);
-  --border: oklch(1 0 0 / 9%);
-  --sidebar: oklch(0.19 0.019 265);
+  --background: oklch(0.98 0.004 260);
+  --foreground: oklch(0.22 0.02 265);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.62 0.16 266);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.008 260);
+  --muted: oklch(0.96 0.006 260);
+  --muted-foreground: oklch(0.5 0.02 262);
+  --terminal: oklch(0.52 0.15 155);
+  --border: oklch(0.2 0.02 265 / 12%);
+  --sidebar: oklch(0.99 0.003 260);
   --radius: 0.25rem;
 }
 
@@ -21,22 +21,16 @@ html, body, [data-testid="stAppViewContainer"], .stApp {
 header[data-testid="stHeader"],
 #MainMenu, footer, [data-testid="stToolbar"],
 [data-testid="stDecoration"],
-[data-testid="stStatusWidget"] {
+[data-testid="stStatusWidget"],
+[data-testid="stSidebar"],
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stBottomBlockContainer"] {
   display: none !important;
 }
 
-[data-testid="stSidebar"] {
-  background: var(--sidebar) !important;
-  border-right: 1px solid var(--border) !important;
-}
-
-[data-testid="stSidebar"] > div:first-child {
-  background: var(--sidebar) !important;
-}
-
 .block-container {
-  padding-top: 1.2rem !important;
-  max-width: 56rem !important;
+  padding: 0 !important;
+  max-width: 100% !important;
 }
 
 .sipe-header {
@@ -44,10 +38,10 @@ header[data-testid="stHeader"],
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.65rem 1rem;
+  padding: 0.7rem 1.25rem;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in oklab, var(--sidebar) 80%, transparent);
-  margin: -1.2rem -1rem 1rem -1rem;
+  background: var(--sidebar);
+  width: 100%;
 }
 
 .sipe-brand {
@@ -59,10 +53,11 @@ header[data-testid="stHeader"],
 .sipe-logo-wrap {
   background: #fff;
   border-radius: 0.35rem;
-  padding: 0.35rem 0.7rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
 }
 
-.sipe-logo-wrap img { height: 24px; width: auto; display: block; }
+.sipe-logo-wrap img { height: 26px; width: auto; display: block; }
 
 .sipe-title-muted {
   color: var(--muted-foreground);
@@ -88,13 +83,6 @@ header[data-testid="stHeader"],
   height: 8px;
   border-radius: 999px;
   background: var(--terminal);
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--terminal) 30%, transparent);
-}
-
-h1, .sipe-h1 {
-  font-size: 1.65rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em;
 }
 
 code, pre, .stCode {
@@ -103,15 +91,31 @@ code, pre, .stCode {
 }
 
 .stChatMessage {
-  background: color-mix(in oklab, var(--card) 60%, transparent) !important;
+  background: var(--card) !important;
   border: 1px solid var(--border) !important;
   border-radius: 0.35rem !important;
 }
 
-[data-testid="stChatInput"] {
-  border: 1px solid var(--border) !important;
-  background: color-mix(in oklab, var(--card) 70%, transparent) !important;
-  border-radius: 0.5rem !important;
+div[data-testid="stHorizontalBlock"] > div:first-child {
+  border-right: 1px solid var(--border);
+  background: var(--sidebar);
+  padding: 0.75rem 1rem 1rem;
+}
+
+div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
+  padding: 0.75rem 1.25rem 0.5rem;
+}
+
+[data-testid="stFileUploader"] {
+  padding: 0 !important;
+}
+[data-testid="stFileUploader"] section {
+  padding: 0.25rem !important;
+  min-height: 2.4rem;
+}
+[data-testid="stFileUploaderDropzone"] {
+  min-height: 2.4rem !important;
+  padding: 0.2rem !important;
 }
 
 .sipe-footer {
@@ -119,17 +123,15 @@ code, pre, .stCode {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding: 0.75rem 0 0;
+  padding: 0.65rem 1.25rem;
   border-top: 1px solid var(--border);
+  background: var(--sidebar);
   color: var(--muted-foreground);
   font-size: 0.7rem;
+  width: 100%;
 }
 
 .sipe-footer img { width: 36px; height: 36px; object-fit: contain; }
-
 .sipe-sipi { display: flex; align-items: center; gap: 0.7rem; }
 .sipe-sipi strong { color: var(--foreground); font-size: 0.75rem; display: block; }
 .sipe-sipi span { font-size: 0.7rem; color: var(--muted-foreground); }
-
-div[data-testid="stCaption"] { color: var(--muted-foreground) !important; }
