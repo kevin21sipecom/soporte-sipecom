@@ -10,11 +10,9 @@ import streamlit as st
 import yaml
 
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_cfg
-from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
-from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
-from soporte_sipecom.onboard import HINTS, detected_agents, probe_node, probe_npm
+from soporte_sipecom.onboard import detected_agents
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
 import soporte_sipecom.engine as _engine_mod
@@ -78,12 +76,6 @@ def save_uploads(files) -> list[Path]:
     return paths
 
 
-@st.cache_data(ttl=90, show_spinner=False)
-def cached_tools():
-    rows = [probe_node(), probe_npm(), probe_codegraph(), probe_repomix(), probe_archify()]
-    return [(p.name, bool(p.ok), p.version or "", HINTS.get(p.name) or p.detail or "") for p in rows]
-
-
 st.set_page_config(
     page_title="Consola de Soporte · Sipecom",
     page_icon=str(SIPI) if SIPI.is_file() else ":material/support_agent:",
@@ -144,6 +136,41 @@ if "conversation_images" not in st.session_state:
     st.session_state.conversation_images = []
 
 with st.sidebar:
+    st.subheader("Conversaciones")
+    if st.button("Nueva conversación", width="stretch"):
+        pid = ""
+        save_thread(
+            st.session_state.chat_id,
+            st.session_state.messages,
+            st.session_state.conversation_images,
+            pid,
+        )
+        st.session_state.chat_id = new_id()
+        st.session_state.messages = []
+        st.session_state.conversation_images = []
+        st.session_state.jump_to = None
+        st.rerun()
+    for item in load_index():
+        cid = item.get("id") or ""
+        if not cid:
+            continue
+        title = item.get("title") or "Nueva conversación"
+        active = cid == st.session_state.chat_id
+        if st.button(title, key=f"conv_{cid}", width="stretch", type="primary" if active else "secondary"):
+            if cid != st.session_state.chat_id:
+                save_thread(
+                    st.session_state.chat_id,
+                    st.session_state.messages,
+                    st.session_state.conversation_images,
+                    "",
+                )
+                msgs, imgs = load_thread(cid)
+                st.session_state.chat_id = cid
+                st.session_state.messages = msgs
+                st.session_state.conversation_images = imgs
+                st.session_state.jump_to = None
+                st.rerun()
+
     st.subheader("Proyecto")
     if proyectos:
         names = [p.get("nombre") or p.get("id") for p in proyectos]
@@ -181,50 +208,6 @@ with st.sidebar:
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc))
-
-    tools = cached_tools()
-    tools_ok = all(ok for _, ok, _, _ in tools)
-    with st.expander("Herramientas", expanded=not tools_ok):
-        for name, ok, ver, hint in tools:
-            st.caption(f"{'OK' if ok else 'NO'}  {name}" + (f"  {ver}" if ver else ""))
-            if not ok and hint:
-                st.caption(hint)
-        st.caption("CodeGraph + Repomix = contexto del proyecto (sin volcar el pack).")
-
-    st.subheader("Conversaciones")
-    if st.button("Nueva conversación", width="stretch"):
-        pid = (proyecto or {}).get("id") or ""
-        save_thread(
-            st.session_state.chat_id,
-            st.session_state.messages,
-            st.session_state.conversation_images,
-            pid,
-        )
-        st.session_state.chat_id = new_id()
-        st.session_state.messages = []
-        st.session_state.conversation_images = []
-        st.session_state.jump_to = None
-        st.rerun()
-    for item in load_index():
-        cid = item.get("id") or ""
-        if not cid:
-            continue
-        title = item.get("title") or "Nueva conversación"
-        active = cid == st.session_state.chat_id
-        if st.button(title, key=f"conv_{cid}", width="stretch", type="primary" if active else "secondary"):
-            if cid != st.session_state.chat_id:
-                save_thread(
-                    st.session_state.chat_id,
-                    st.session_state.messages,
-                    st.session_state.conversation_images,
-                    (proyecto or {}).get("id") or "",
-                )
-                msgs, imgs = load_thread(cid)
-                st.session_state.chat_id = cid
-                st.session_state.messages = msgs
-                st.session_state.conversation_images = imgs
-                st.session_state.jump_to = None
-                st.rerun()
 
     conv_imgs = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
     if conv_imgs:
