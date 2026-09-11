@@ -1,0 +1,20 @@
+[project]
+name = "soporte-sipecom"
+version = "0.1.0"
+description = "SIPECOM-SOPORTE: CLI de soporte. Doctor de herramientas y puerto 2121."
+readme = "README.md"
+authors = [
+    { name = "kevin21sipecom", email = "kfernandez@sipecom.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pyfiglet>=1.0",
+]
+
+[project.scripts]
+soporte = "soporte_sipecom.cli:main"
+sipecom-soporte = "soporte_sipecom.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
