@@ -21,7 +21,16 @@ Available models:
         text = "Fetching available models...\ngemini-3.8-flash-high\tGemini 3.8 Flash (High)\nclaude-sonnet-4-6\tClaude Sonnet 4.6\n"
         models = parse_agy_models(text)
         self.assertEqual(models[0].id, "gemini-3.8-flash-high")
+        self.assertEqual(models[0].efforts, [])
         self.assertEqual(models[1].id, "claude-sonnet-4-6")
+        self.assertEqual(models[1].efforts, ["low", "medium", "high"])
+
+    def test_baked_effort(self):
+        from soporte_sipecom.models import baked_effort
+
+        self.assertEqual(baked_effort("gemini-3.8-flash-high"), "high")
+        self.assertEqual(baked_effort("gpt-oss-120b-medium"), "medium")
+        self.assertIsNone(baked_effort("claude-sonnet-4-6"))
 
     def test_codex_hides(self):
         text = '{"models":[{"slug":"gpt-6-astra","display_name":"Astra","visibility":"list","supported_reasoning_levels":[{"effort":"low"},{"effort":"high"}]},{"slug":"hidden","visibility":"hide"}]}'

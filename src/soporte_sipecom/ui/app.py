@@ -13,13 +13,17 @@ from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg
 from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.detect import which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
-from soporte_sipecom.models import list_efforts, list_models
 import soporte_sipecom.detect as _detect_mod
+import soporte_sipecom.models as _models_mod
 import soporte_sipecom.engine as _engine_mod
 
 importlib.reload(_detect_mod)
+_models_mod = importlib.reload(_models_mod)
 _engine_mod = importlib.reload(_engine_mod)
 run_engine = _engine_mod.run_engine
+baked_effort = _models_mod.baked_effort
+list_efforts = _models_mod.list_efforts
+list_models = _models_mod.list_models
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
@@ -157,8 +161,18 @@ with st.sidebar:
                 key=f"cli_model_{motor}",
             )
             efforts = list_efforts(motor, modelo, rows)
-            effort_idx = efforts.index("medium") if "medium" in efforts else 0
-            effort = st.selectbox("Effort", efforts, index=effort_idx, key=f"cli_effort_{motor}_{modelo}")
+            if efforts:
+                effort_idx = efforts.index("medium") if "medium" in efforts else 0
+                effort = st.selectbox(
+                    "Effort",
+                    efforts,
+                    index=effort_idx,
+                    key=f"cli_effort_{motor}_{modelo}",
+                )
+            else:
+                effort = baked_effort(modelo) or ""
+                if effort:
+                    st.caption(f"Effort ya va en el modelo (`{effort}`).")
         else:
             modelo = ""
             effort = "medium"

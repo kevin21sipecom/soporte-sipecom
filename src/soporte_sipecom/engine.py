@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 from soporte_sipecom.detect import agent_binary, which
-from soporte_sipecom.models import clamp_effort, list_efforts
+from soporte_sipecom.models import baked_effort, clamp_effort, list_efforts
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 API_KEY_NAMES = {
@@ -137,8 +137,6 @@ def run_engine(
                 binary,
                 "--model",
                 model,
-                "--effort",
-                effort,
                 "--dangerously-skip-permissions",
                 "--disable-slash-commands",
                 "--output-format",
@@ -150,6 +148,8 @@ def run_engine(
                 "--print",
                 prompt,
             ]
+            if not baked_effort(model) and effort:
+                cmd[3:3] = ["--effort", effort]
         elif name == "codex":
             if not binary:
                 return "codex no está en PATH", "none", ""

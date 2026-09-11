@@ -33,7 +33,7 @@ Binario: `agy`. En la UI el nombre es `antigravity`.
 agy --model <modelo> --effort <low|medium|high> --dangerously-skip-permissions --disable-slash-commands --output-format text --add-dir <origen> --print-timeout <Ns> --print <prompt>
 ```
 
-Si el usuario pide `xhigh` / `max` / `ultra`, se recorta a `high` (la CLI no documenta esos valores).
+En Gemini el effort va **en el id** (`gemini-3.8-flash-high`). No se pasa `--effort` a la vez: la CLI responde `conflicts with --effort`. En Claude/otros sin sufijo sí se usa `--effort`.
 
 ## codex
 

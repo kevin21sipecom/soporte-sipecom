@@ -13,6 +13,16 @@ from soporte_sipecom.detect import run_cmd, which
 CACHE_TTL_S = 600
 GROK_EFFORTS = ["low", "medium", "high", "xhigh"]
 AGY_EFFORTS = ["low", "medium", "high"]
+BAKED_EFFORTS = ("medium", "high", "low")
+
+
+def baked_effort(model_id: str) -> str | None:
+    """Si el id ya trae el effort (gemini-3.8-flash-high), no se puede pasar --effort."""
+    low = (model_id or "").strip().lower()
+    for level in BAKED_EFFORTS:
+        if low.endswith(f"-{level}") or low.endswith(f"_{level}"):
+            return level
+    return None
 
 
 @dataclass
@@ -106,7 +116,15 @@ def parse_agy_models(text: str) -> list[ModelInfo]:
         if mid in seen:
             continue
         seen.add(mid)
-        models.append(ModelInfo(id=mid, label=label, default=not models, efforts=list(AGY_EFFORTS)))
+        baked = baked_effort(mid)
+        models.append(
+            ModelInfo(
+                id=mid,
+                label=label,
+                default=not models,
+                efforts=[] if baked else list(AGY_EFFORTS),
+            )
+        )
     return models
 
 
@@ -181,9 +199,11 @@ def list_models(agent: str, *, refresh: bool = False) -> list[ModelInfo]:
 
 def list_efforts(agent: str, model_id: str = "", models: list[ModelInfo] | None = None) -> list[str]:
     agent = (agent or "").strip().lower()
+    if agent == "antigravity" and baked_effort(model_id):
+        return []
     infos = models if models is not None else list_models(agent)
     for item in infos:
-        if item.id == model_id and item.efforts:
+        if item.id == model_id and item.efforts is not None:
             return list(item.efforts)
     if agent == "antigravity":
         return list(AGY_EFFORTS)
