@@ -19,7 +19,9 @@ uv sync
 uv run soporte
 uv run soporte doctor
 uv run soporte select --use grok,codex
-uv run soporte config
+uv run soporte ui
 ```
+
+Consola Streamlit (diseño SIPECOM, puerto **2121**): header, Sipi, sidebar de motor, tabs Terminal/Mapas/Receta. CLI local, sin API keys.
 
 Config: `~/.soporte-sipecom.json`

@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
+from pathlib import Path
 
 from soporte_sipecom.banner import banner
 from soporte_sipecom.config import DEFAULT_PORT, config_path, load, save
@@ -118,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     cfgp = sub.add_parser("config", help="Mostrar config (puerto + agentes)")
+    sub.add_parser("ui", help="Abrir consola Streamlit (puerto 2121)")
 
     args = parser.parse_args(argv)
     port = args.port if args.port else load().get("port") or DEFAULT_PORT
@@ -148,6 +151,27 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(cfg, indent=2, ensure_ascii=False))
         print(f"archivo: {config_path()}")
         return 0
+
+    if args.cmd == "ui":
+        app = Path(__file__).resolve().parent / "ui" / "app.py"
+        cmd = [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(app),
+            "--server.address",
+            "127.0.0.1",
+            "--server.port",
+            str(port),
+            "--server.headless",
+            "true",
+            "--browser.gatherUsageStats",
+            "false",
+        ]
+        print(banner(port))
+        print(f"Streamlit → http://127.0.0.1:{port}")
+        return subprocess.call(cmd)
 
     parser.print_help()
     return 2

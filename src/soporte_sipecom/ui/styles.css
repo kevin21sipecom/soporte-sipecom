@@ -1,0 +1,135 @@
+:root {
+  --background: oklch(0.17 0.018 265);
+  --foreground: oklch(0.95 0.008 260);
+  --card: oklch(0.21 0.02 265);
+  --primary: oklch(0.68 0.14 266);
+  --primary-foreground: oklch(0.16 0.02 265);
+  --secondary: oklch(0.26 0.02 265);
+  --muted: oklch(0.24 0.018 265);
+  --muted-foreground: oklch(0.68 0.02 262);
+  --terminal: oklch(0.82 0.16 155);
+  --border: oklch(1 0 0 / 9%);
+  --sidebar: oklch(0.19 0.019 265);
+  --radius: 0.25rem;
+}
+
+html, body, [data-testid="stAppViewContainer"], .stApp {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+header[data-testid="stHeader"],
+#MainMenu, footer, [data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] {
+  display: none !important;
+}
+
+[data-testid="stSidebar"] {
+  background: var(--sidebar) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+  background: var(--sidebar) !important;
+}
+
+.block-container {
+  padding-top: 1.2rem !important;
+  max-width: 56rem !important;
+}
+
+.sipe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--sidebar) 80%, transparent);
+  margin: -1.2rem -1rem 1rem -1rem;
+}
+
+.sipe-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sipe-logo-wrap {
+  background: #fff;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.7rem;
+}
+
+.sipe-logo-wrap img { height: 24px; width: auto; display: block; }
+
+.sipe-title-muted {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sipe-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--terminal) 25%, transparent);
+  background: color-mix(in oklab, var(--terminal) 10%, transparent);
+  color: var(--terminal);
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.sipe-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--terminal);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--terminal) 30%, transparent);
+}
+
+h1, .sipe-h1 {
+  font-size: 1.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+code, pre, .stCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  color: var(--terminal) !important;
+}
+
+.stChatMessage {
+  background: color-mix(in oklab, var(--card) 60%, transparent) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.35rem !important;
+}
+
+[data-testid="stChatInput"] {
+  border: 1px solid var(--border) !important;
+  background: color-mix(in oklab, var(--card) 70%, transparent) !important;
+  border-radius: 0.5rem !important;
+}
+
+.sipe-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+}
+
+.sipe-footer img { width: 36px; height: 36px; object-fit: contain; }
+
+.sipe-sipi { display: flex; align-items: center; gap: 0.7rem; }
+.sipe-sipi strong { color: var(--foreground); font-size: 0.75rem; display: block; }
+.sipe-sipi span { font-size: 0.7rem; color: var(--muted-foreground); }
+
+div[data-testid="stCaption"] { color: var(--muted-foreground) !important; }
