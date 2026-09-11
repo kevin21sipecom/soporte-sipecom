@@ -20,6 +20,17 @@ Docs: https://docs.astral.sh/uv/getting-started/installation/
 
 ## Producto
 
+Desde PyPI:
+
+```text
+uv tool install sipecom-soporte
+uv tool update-shell
+sipecom-soporte
+sipecom-soporte dashboard
+```
+
+Desde git:
+
 ```text
 uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
 uv tool update-shell

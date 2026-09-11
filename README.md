@@ -20,13 +20,19 @@ Cierra y abre la terminal, luego `uv --version`.
 
 ## Instalar en toda la PC
 
-No hace falta `cd` al repo para usarlo. Instálalo como herramienta de `uv`:
+No hace falta `cd` al repo. Desde PyPI:
 
 ```text
-uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
+uv tool install sipecom-soporte
 uv tool update-shell
 sipecom-soporte
 sipecom-soporte dashboard
+```
+
+Desde git (misma versión, sin PyPI):
+
+```text
+uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
 ```
 
 Actualizar:

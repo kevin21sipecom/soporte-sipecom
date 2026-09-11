@@ -7,6 +7,7 @@ authors = [
     { name = "kevin21sipecom", email = "kfernandez@sipecom.com" }
 ]
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
 dependencies = [
     "pyfiglet>=1.0",
     "streamlit>=1.36",

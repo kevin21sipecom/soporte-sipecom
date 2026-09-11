@@ -3,6 +3,7 @@
 ## 0.5.4
 
 - Índice de conversaciones centrado en vertical.
+- Publicación a PyPI (Trusted Publishing) en cada GitHub Release.
 
 ## 0.5.3
 
