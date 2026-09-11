@@ -83,48 +83,73 @@ def _top_folders(origen: Path) -> list[str]:
 def build_spec(proyecto: dict) -> dict:
     origen = Path(proyecto.get("origen") or ".")
     nombre = proyecto.get("nombre") or origen.name
-    folders = _top_folders(origen)
+    folders = _top_folders(origen)[:9]
     if not folders:
         folders = [nombre]
     components = []
+    used: set[str] = set()
+    cols = 3
+    cell_w, cell_h = 150, 64
+    gap_x, gap_y = 52, 48
+    ox, oy = 48, 48
     for i, folder in enumerate(folders):
         kind = _kind(folder)
-        col = {"external": 0, "frontend": 1, "security": 1, "backend": 2, "database": 3}.get(kind, 2)
+        cid = _slug_id(folder) or f"n{i}"
+        base = cid
+        n = 2
+        while cid in used:
+            cid = f"{base}-{n}"
+            n += 1
+        used.add(cid)
+        row, col = divmod(i, cols)
+        x = ox + col * (cell_w + gap_x)
+        y = oy + row * (cell_h + gap_y)
         components.append(
             {
-                "id": _slug_id(folder) or f"n{i}",
+                "id": cid,
                 "type": kind,
-                "label": folder[:40],
+                "label": folder[:28],
                 "sublabel": kind,
-                "row": i // 3,
-                "col": col if col < 4 else i % 3,
+                "pos": [x, y],
+                "size": [cell_w, cell_h],
             }
         )
     connections = []
     for a, b in zip(components, components[1:]):
-        connections.append({"id": f"{a['id']}-to-{b['id']}", "from": a["id"], "to": b["id"]})
+        connections.append({"id": f"{a['id']}-to-{b['id']}"[:48], "from": a["id"], "to": b["id"]})
     return {
         "schema_version": 1,
         "diagram_type": "architecture",
         "meta": {
-            "title": nombre,
+            "title": str(nombre)[:80],
             "subtitle": "CodeGraph + pack",
             "quality_profile": "standard",
         },
-        "layout": {"mode": "grid", "cols": 4, "gapX": 48, "gapY": 40, "cellW": 150, "cellH": 64},
         "components": components,
-        "connections": connections[:12],
+        "connections": connections[:8],
         "cards": [
             {
                 "dot": "cyan",
                 "title": "Evidencia",
                 "items": [
                     "Carpetas del origen vía CodeGraph",
-                    "Pack Repomix para detalle en el chat",
+                    "Pack Repomix para el detalle en el chat",
                 ],
             }
         ],
     }
+
+
+def pretty_archify_error(out: str) -> str:
+    messages = re.findall(r'"message"\s*:\s*"((?:\\.|[^"\\])*)"', out)
+    if messages:
+        lines = []
+        for raw in messages[:3]:
+            text = raw.replace("\\n", " ").replace('\\"', '"')
+            lines.append(text[:160])
+        return "Archify: el layout chocaba. Ya se reubican los nodos. " + " · ".join(lines)
+    compact = " ".join(out.split())
+    return compact[-500:] or "archify deliver falló"
 
 
 def existing_artifacts(proyecto: dict) -> list[Path]:
@@ -173,7 +198,7 @@ def render_mapa(proyecto: dict) -> dict:
         timeout=120,
     )
     if code != 0 or not html_path.is_file():
-        raise RuntimeError(out[-2000:] or "archify deliver falló")
+        raise RuntimeError(pretty_archify_error(out))
     png = dest / "architecture.png"
     run([node, native(script), "visual-check", native(html_path), "--json"], timeout=90)
     for candidate in dest.glob("*.png"):

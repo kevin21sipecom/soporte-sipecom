@@ -331,13 +331,13 @@ if vista == "Mapa":
     arts = existing_artifacts(proyecto)
     pngs = [p for p in arts if p.suffix.lower() in {".png", ".webp"}]
     htmls = [p for p in arts if p.suffix.lower() == ".html"]
-    if pngs:
-        st.image(str(pngs[0]), use_container_width=True)
-    elif htmls:
+    if htmls:
         import streamlit.components.v1 as components
 
         raw = htmls[0].read_text(encoding="utf-8", errors="replace")
         components.html(raw, height=720, scrolling=True)
+    elif pngs:
+        st.image(str(pngs[0]), use_container_width=True)
     else:
         st.info("Todavía no hay mapa de este proyecto.")
     if st.button("Armar mapa", type="primary"):
@@ -354,7 +354,7 @@ if vista == "Mapa":
             save_catalog(catalog)
             st.rerun()
         except Exception as exc:
-            st.error(str(exc)[-1500:])
+            st.error(str(exc)[:400])
     st.stop()
 
 jump = st.session_state.get("jump_to")
