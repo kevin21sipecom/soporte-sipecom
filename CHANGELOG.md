@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Doctor imprime comandos de instalación de CodeGraph y Archify.
+
 ## 0.4.0
 
 - Paquete y comando: `sipecom-soporte` (`uv tool upgrade sipecom-soporte`).

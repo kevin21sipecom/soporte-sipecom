@@ -42,17 +42,44 @@ uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
 
 ## Onboarding
 
-`sipecom-soporte` valida:
+`sipecom-soporte` valida las piezas y, si faltan, imprime el comando para instalarlas.
 
-| Pieza | Si falta |
-| --- | --- |
-| Node.js / npm | `winget install OpenJS.NodeJS.LTS` y reabrir la terminal |
-| Repomix | `npm install -g repomix` |
-| CodeGraph | CLI en PATH |
-| Archify | Node + `bin/archify.mjs` (skill o `ARCHIFY_HOME`) |
-| grok / agy / codex | su propio instalador + login |
+Usa **PowerShell normal** (no Administrador). Luego cierra y abre la terminal.
 
-El dashboard elige qué agente usar. `select --use` es opcional.
+### CodeGraph
+
+```text
+npm i -g @colbymchenry/codegraph
+```
+
+Comprueba: `codegraph --version`
+
+### Archify
+
+No es un paquete npm. Es el CLI `bin/archify.mjs`. Con Hermes ya está en esa carpeta:
+
+```text
+setx ARCHIFY_HOME "%LOCALAPPDATA%\hermes\skills\creative\archify"
+```
+
+Si no tienes Hermes, copia una carpeta que tenga `bin\archify.mjs` y apunta `ARCHIFY_HOME` a esa carpeta.
+
+Comprueba:
+
+```text
+node "%ARCHIFY_HOME%\bin\archify.mjs" doctor
+```
+
+### Repomix y Node
+
+```text
+winget install OpenJS.NodeJS.LTS
+npm install -g repomix
+```
+
+### Agentes
+
+grok / agy / codex: su propio instalador + login. El dashboard elige cuál usar. `select --use` es opcional.
 
 ## Puerto
 

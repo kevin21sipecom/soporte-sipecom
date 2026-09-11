@@ -13,11 +13,11 @@ from soporte_sipecom.detect import (
 )
 
 HINTS = {
-    "node": "Instala Node.js LTS (trae npm). Windows: winget install OpenJS.NodeJS.LTS — luego cierra y abre la terminal.",
-    "npm": "npm viene con Node.js. Si node existe y npm no, reinstala Node.js y reabre la terminal.",
-    "codegraph": "Instala el CLI CodeGraph y déjalo en PATH (o en AppData/Local/codegraph/current/bin).",
-    "repomix": "Con npm: npm install -g repomix",
-    "archify": "Hace falta Node.js y bin/archify.mjs (skill creative/archify o ARCHIFY_HOME).",
+    "node": "winget install OpenJS.NodeJS.LTS",
+    "npm": "winget install OpenJS.NodeJS.LTS",
+    "codegraph": "npm i -g @colbymchenry/codegraph",
+    "repomix": "npm install -g repomix",
+    "archify": 'setx ARCHIFY_HOME "%LOCALAPPDATA%\\hermes\\skills\\creative\\archify"',
     "grok": "Instala Grok CLI y autentica (grok login). Binario típico: ~/.grok/bin/grok",
     "antigravity": "Instala Antigravity CLI. Binario: agy",
     "codex": "Instala OpenAI Codex CLI (codex exec debe existir).",
@@ -92,6 +92,21 @@ def print_onboard() -> int:
     if families_ok:
         print("Todo OK. Siguiente:  sipecom-soporte dashboard")
         return 0
-    print("Instala lo que marca NO y vuelve a correr:  sipecom-soporte")
+    missing = [p.name for p in rows if not p.ok and p.name in HINTS]
+    cmds = [HINTS[n] for n in missing if n in {"node", "npm", "codegraph", "repomix", "archify"}]
+    # npm y node comparten instalador; no duplicar
+    seen: list[str] = []
+    for cmd in cmds:
+        if cmd not in seen:
+            seen.append(cmd)
+    if seen:
+        print("Copia y pega (PowerShell normal, no Administrador):")
+        print()
+        for cmd in seen:
+            print(f"  {cmd}")
+        print()
+        print("Cierra y abre la terminal. Luego:  sipecom-soporte")
+    else:
+        print("Instala lo que marca NO y vuelve a correr:  sipecom-soporte")
     print("El dashboard elige grok / antigravity / codex; no hace falta `select`.")
     return 1
