@@ -14,8 +14,8 @@ dependencies = [
 ]
 
 [project.scripts]
-soporte = "soporte_sipecom.cli:main"
 sipecom-soporte = "soporte_sipecom.cli:main"
+soporte-sipecom = "soporte_sipecom.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/kevin21sipecom/soporte-sipecom"

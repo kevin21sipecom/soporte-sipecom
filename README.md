@@ -25,31 +25,14 @@ No hace falta `cd` al repo para usarlo. Instálalo como herramienta de `uv`:
 ```text
 uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
 uv tool update-shell
-```
-
-Si el comando no aparece, una vez:
-
-```text
-uv tool update-shell
-```
-
-(en Windows: cierra y abre la terminal). Luego, **desde cualquier carpeta**:
-
-```text
 sipecom-soporte
 sipecom-soporte dashboard
 ```
 
-Actualizar (el paquete se llama `soporte-sipecom`; el comando es `sipecom-soporte`):
+Actualizar:
 
 ```text
 uv tool upgrade soporte-sipecom
-```
-
-Si aún no está instalado como herramienta:
-
-```text
-uv tool install --force git+https://github.com/kevin21sipecom/soporte-sipecom.git
 ```
 
 Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.
