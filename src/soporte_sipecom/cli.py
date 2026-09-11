@@ -12,6 +12,7 @@ from soporte_sipecom.config import DEFAULT_PORT, config_path, load, save
 from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.detect import doctor, probe_agent
 from soporte_sipecom.models import list_models
+from soporte_sipecom.onboard import detected_agents, print_onboard
 
 
 def _print_doctor(probes, *, as_json: bool) -> int:
@@ -113,6 +114,11 @@ def cmd_select(chosen: list[str] | None) -> int:
 
 
 def launch_dashboard(port: int) -> int:
+    cfg = load()
+    found = detected_agents()
+    if found:
+        cfg["agents"] = found
+        save(cfg)
     app = Path(__file__).resolve().parent / "ui" / "app.py"
     cmd = [
         sys.executable,
@@ -147,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     doc = sub.add_parser("doctor", help="Validar codegraph, repomix, archify y agentes")
     doc.add_argument("--json", action="store_true")
 
-    sel = sub.add_parser("select", help="Elegir agentes CLI a usar")
+    sel = sub.add_parser("select", help="Opcional. El dashboard elige las CLIs.")
     sel.add_argument(
         "--use",
         default="",
@@ -158,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     models_p.add_argument("--refresh", action="store_true")
     models_p.add_argument("--json", action="store_true")
 
+    sub.add_parser("onboard", help="Comprobar node/npm, CodeGraph, Repomix, Archify y agentes")
     sub.add_parser("config", help="Mostrar config (puerto + agentes)")
     sub.add_parser("dashboard", help="Abrir la consola Streamlit (esta UI)")
     sub.add_parser("ui", help="Alias de dashboard")
@@ -165,12 +172,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw)
     port = args.port if args.port else load().get("port") or DEFAULT_PORT
 
-    if args.cmd is None:
+    if args.cmd is None or args.cmd == "onboard":
         print(banner(port))
-        probes = doctor()
-        code = _print_doctor(probes, as_json=False)
-        print("\nDashboard:  sipecom-soporte dashboard")
-        print(f"Puerto: {port}")
+        code = print_onboard()
+        print(f"\nDashboard:  sipecom-soporte dashboard")
+        print(f"Puerto: {port}  (solo localhost)")
         return code
 
     if args.cmd == "doctor":

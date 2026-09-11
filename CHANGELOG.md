@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Instalación global con `uv tool install` (no hace falta `cd` al repo).
+- Onboarding: node/npm, CodeGraph, Repomix, Archify y agentes.
+- El dashboard elige las CLIs (el detector las rellena). `select` es opcional.
+- Imágenes del chat viven en la conversación y se recuerdan en el hilo.
+
 ## 0.2.0
 
 - CLIs válidas: grok, antigravity (`agy`), codex.

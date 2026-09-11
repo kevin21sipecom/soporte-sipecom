@@ -1,45 +1,30 @@
-# Instalación
+# Instalación (toda la PC)
 
-## Entorno
-
-- Windows 10/11 (el desarrollo actual es Windows).
-- Python ≥ 3.11.
-- `uv` en PATH.
+## Producto
 
 ```text
-uv sync
-uv run sipecom-soporte doctor
+uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
+uv tool update-shell
+sipecom-soporte
+sipecom-soporte dashboard
 ```
 
-El doctor cubre cuatro familias:
+Python 3.11+ y [uv](https://docs.astral.sh/uv/). No hace falta quedarse dentro de una carpeta clonada.
 
-1. CodeGraph
-2. Repomix
-3. Archify (`node bin/archify.mjs`)
-4. Agentes: grok, antigravity (`agy`) o codex — basta uno headless
+## Onboarding
 
-Claude no forma parte de las CLIs válidas de este producto.
+`sipecom-soporte` valida:
 
-## Agentes
+| Pieza | Si falta |
+| --- | --- |
+| Node.js / npm | `winget install OpenJS.NodeJS.LTS` y reabrir la terminal |
+| Repomix | `npm install -g repomix` |
+| CodeGraph | CLI en PATH |
+| Archify | Node + `bin/archify.mjs` (skill o `ARCHIFY_HOME`) |
+| grok / agy / codex | su propio instalador + login |
 
-Instala y autentica cada CLI por su propio flujo (login local). SIPECOM-SOPORTE no guarda API keys para el modo CLI.
-
-Rutas habituales de binario (el detector las busca si no están en PATH):
-
-- Grok: `~/.grok/bin/grok`
-- Codex: instalación estándar de OpenAI Codex
-- Antigravity: `agy` (carpeta local `agy/bin`)
-
-Comprueba modelos:
-
-```text
-uv run sipecom-soporte models
-```
+El dashboard elige qué agente usar. `select --use` es opcional.
 
 ## Puerto
 
-Por defecto **2121**, solo en `127.0.0.1`.
-
-```text
-uv run sipecom-soporte --port 2121 dashboard
-```
+**2121**, solo `127.0.0.1`.

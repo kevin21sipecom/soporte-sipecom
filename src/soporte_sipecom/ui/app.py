@@ -9,10 +9,11 @@ from pathlib import Path
 import streamlit as st
 import yaml
 
-from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg
+from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_cfg
 from soporte_sipecom.constants import VALID_AGENTS
-from soporte_sipecom.detect import which
+from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
+from soporte_sipecom.onboard import HINTS, detected_agents, probe_node, probe_npm
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
 import soporte_sipecom.engine as _engine_mod
@@ -27,10 +28,6 @@ list_models = _models_mod.list_models
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
-DEFAULT_CATALOGO = Path(
-    r"C:/Users/kfernandez/projects/seguridad/prueba del desposte/salida/chef/catalogo.yaml"
-)
-UPLOADS = HERE / ".uploads"
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 API_PROVIDERS = ["OpenAI", "xAI (Grok)", "Anthropic (Claude)"]
 SIPI = ASSETS / "sipi-colibri.png"
@@ -38,32 +35,33 @@ LOGO = ASSETS / "sipecom-logo.png"
 
 
 def seed_catalog() -> dict:
-    data = load_catalog()
-    if data.get("proyectos"):
-        return data
-    if DEFAULT_CATALOGO.is_file():
-        seeded = yaml.safe_load(DEFAULT_CATALOGO.read_text(encoding="utf-8")) or {}
-        seeded.setdefault("motor_default", "grok")
-        seeded.setdefault("timeout_s", 240)
-        seeded.setdefault("proyectos", [])
-        save_catalog(seeded)
-        return load_catalog()
-    return data
+    return load_catalog()
+
+
+def chat_dir() -> Path:
+    sid = st.session_state.setdefault("chat_id", str(int(time.time() * 1000)))
+    path = Path.home() / ".soporte-sipecom" / "chats" / str(sid)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def save_uploads(files) -> list[Path]:
     if not files:
         return []
-    UPLOADS.mkdir(parents=True, exist_ok=True)
-    dest = UPLOADS / str(int(time.time() * 1000))
-    dest.mkdir(parents=True, exist_ok=True)
+    dest = chat_dir()
     paths: list[Path] = []
     for uploaded in files:
         name = Path(getattr(uploaded, "name", "archivo")).name or "archivo"
-        path = dest / name
+        path = dest / f"{int(time.time() * 1000)}-{name}"
         path.write_bytes(uploaded.getvalue())
         paths.append(path)
     return paths
+
+
+@st.cache_data(ttl=90, show_spinner=False)
+def cached_tools():
+    rows = [probe_node(), probe_npm(), probe_codegraph(), probe_repomix(), probe_archify()]
+    return [(p.name, bool(p.ok), p.version or "", HINTS.get(p.name) or p.detail or "") for p in rows]
 
 
 st.set_page_config(
@@ -96,10 +94,16 @@ if LOGO.is_file():
 catalog = seed_catalog()
 proyectos = catalog.get("proyectos") or []
 cfg = load_cfg()
-saved_agents = cfg.get("agents") or ["grok", "codex"]
+live_agents = detected_agents()
+if live_agents and cfg.get("agents") != live_agents:
+    cfg["agents"] = live_agents
+    save_cfg(cfg)
+saved_agents = cfg.get("agents") or live_agents
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "conversation_images" not in st.session_state:
+    st.session_state.conversation_images = []
 
 with st.sidebar:
     st.subheader("Proyecto")
@@ -127,6 +131,27 @@ with st.sidebar:
                 except Exception as exc:
                     st.error(str(exc))
 
+    tools = cached_tools()
+    tools_ok = all(ok for _, ok, _, _ in tools)
+    with st.expander("Herramientas", expanded=not tools_ok):
+        for name, ok, ver, hint in tools:
+            st.caption(f"{'OK' if ok else 'NO'}  {name}" + (f"  {ver}" if ver else ""))
+            if not ok and hint:
+                st.caption(hint)
+        st.caption("CodeGraph + Repomix = contexto del proyecto (sin volcar el pack).")
+
+    if st.button("Nueva conversación"):
+        st.session_state.messages = []
+        st.session_state.conversation_images = []
+        st.session_state.chat_id = str(int(time.time() * 1000))
+        st.rerun()
+
+    conv_imgs = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
+    if conv_imgs:
+        with st.expander(f"Imágenes de esta conversación ({len(conv_imgs)})", expanded=False):
+            for p in conv_imgs:
+                st.image(str(p), caption=p.name, width=120)
+
     st.subheader("Modo de ejecución")
     modo = st.segmented_control(
         "Modo",
@@ -139,8 +164,14 @@ with st.sidebar:
     st.subheader("Motor")
     if modo == "CLI local":
         clis = list(VALID_AGENTS)
-        preferred = next((a for a in saved_agents if a in clis), clis[0])
+        preferred = cfg.get("last_agent") if cfg.get("last_agent") in clis else None
+        if not preferred:
+            preferred = next((a for a in live_agents if a in clis), clis[0])
         motor = st.selectbox("CLI", clis, index=clis.index(preferred), key="cli_agent")
+        if motor and motor != cfg.get("last_agent"):
+            cfg["last_agent"] = motor
+            cfg["agents"] = live_agents or list(VALID_AGENTS)
+            save_cfg(cfg)
         if not which(motor):
             st.caption(f"{motor} no está en esta PC. El resto de CLIs sí se pueden elegir.")
         else:
@@ -235,6 +266,11 @@ if prompt:
     text = (prompt.text or "") if hasattr(prompt, "text") else str(prompt)
     files = list(getattr(prompt, "files", None) or [])
     adjuntos = save_uploads(files)
+    for p in adjuntos:
+        sp = str(p)
+        if sp not in st.session_state.conversation_images:
+            st.session_state.conversation_images.append(sp)
+    memoria = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
 
     st.session_state.messages.append(
         {"role": "user", "content": text, "adjuntos": [str(p) for p in adjuntos]}
@@ -260,7 +296,7 @@ if prompt:
                     effort,
                     proyecto,
                     text,
-                    adjuntos,
+                    memoria,
                     int(catalog.get("timeout_s") or 240),
                 )
             status.update(label="Listo", state="complete")

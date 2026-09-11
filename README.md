@@ -1,96 +1,74 @@
 # SIPECOM-SOPORTE
 
-CLI y consola local para consultar proyectos indexados (CodeGraph + Repomix) usando los agentes instalados en la PC.
+CLI global y consola local para consultar proyectos (CodeGraph + Repomix) con **grok**, **antigravity** o **codex**.
 
-La UI vive en **localhost**. No hay túnel ni exposición a internet.
+La UI es **localhost** (`127.0.0.1:2121`). Sin túnel.
 
 ![Consola SIPECOM-SOPORTE](docs/consola-ui.png)
 
-## Qué es
+## Instalar en toda la PC
 
-`sipecom-soporte` es un producto Python instalable con `uv`:
-
-1. Valida las herramientas de soporte (`doctor`).
-2. Detecta las CLIs de agente **grok**, **antigravity** (`agy`) y **codex**.
-3. Lista los **modelos reales** de cada CLI (no hay catálogo hardcodeado).
-4. Abre el dashboard Streamlit en `http://127.0.0.1:2121`.
-
-Las consultas del chat se lanzan con esos binarios locales. No se pegan API keys al motor CLI.
-
-## Requisitos
-
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/)
-- Al menos una CLI de agente: Grok, Antigravity o Codex
-- CodeGraph, Repomix y Archify para el doctor 4/4 (el dashboard abre igual si el doctor no está 4/4)
-
-## Instalación
+No hace falta `cd` al repo para usarlo. Instálalo como herramienta de `uv`:
 
 ```text
-git clone https://github.com/kevin21sipecom/soporte-sipecom.git
-cd soporte-sipecom
-uv sync
+uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
+uv tool update-shell
 ```
 
-## Inicio rápido
+Si el comando no aparece, una vez:
 
 ```text
-uv run sipecom-soporte
-uv run sipecom-soporte doctor
-uv run sipecom-soporte models
-uv run sipecom-soporte select --use grok,antigravity,codex
-uv run sipecom-soporte dashboard
+uv tool update-shell
 ```
 
-Abre **http://127.0.0.1:2121**. Solo escucha en loopback.
+(en Windows: cierra y abre la terminal). Luego, **desde cualquier carpeta**:
+
+```text
+sipecom-soporte
+sipecom-soporte dashboard
+```
+
+Actualizar:
+
+```text
+uv tool upgrade sipecom-soporte
+```
+
+Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.
+
+## Onboarding
+
+`sipecom-soporte` (sin argumentos) comprueba:
+
+1. **node** y **npm** (Repomix y Archify los necesitan)
+2. **CodeGraph**, **Repomix**, **Archify**
+3. Agentes: grok / antigravity (`agy`) / codex
+
+Si falta algo, imprime cómo instalarlo (p. ej. `npm install -g repomix` o Node.js LTS). Cuando todo está OK:
+
+```text
+sipecom-soporte dashboard
+```
+
+Las CLIs las elige el **dashboard**. No hace falta `select --use`.
+
+## Dashboard
+
+- Motor = detector de CLIs de esta PC.
+- Modelos = listado vivo de esa CLI.
+- Proyecto: CodeGraph + pack Repomix (el pack no se vuelca al prompt).
+- Imágenes: viven en **esta conversación**; puedes subir otra y se recuerdan las anteriores. «Nueva conversación» limpia el hilo.
 
 ## Comandos
 
 | Comando | Descripción |
 | --- | --- |
-| `sipecom-soporte` | Banner + doctor |
-| `sipecom-soporte doctor` | Valida CodeGraph, Repomix, Archify y agentes |
-| `sipecom-soporte models` | Modelos y effort que reporta cada CLI |
-| `sipecom-soporte select --use grok,codex` | Guarda qué agentes usar |
-| `sipecom-soporte config` | Muestra puerto y agentes |
-| `sipecom-soporte dashboard` | Consola Streamlit en localhost:2121 |
-| `sipecom-soporte ui` | Alias de `dashboard` |
-
-`--port` cambia el puerto (por defecto 2121).
-
-## Agentes y modelos
-
-CLIs válidas: **grok**, **antigravity**, **codex**.
-
-Al elegir una CLI, la consola pregunta a ese binario qué modelos tiene:
-
-| CLI | Binario | Cómo se listan los modelos | Cómo se ejecuta |
-| --- | --- | --- | --- |
-| grok | `grok` | `grok models` | `--prompt-file` |
-| antigravity | `agy` | `agy models` | `--print` |
-| codex | `codex` | `codex debug models` | `codex exec` |
-
-El listado se cachea unos minutos. Fuerza recarga con `sipecom-soporte models --refresh`.
-
-Documentación de agentes: [docs/agentes.md](docs/agentes.md).
-
-## Configuración
-
-Archivo: `~/.soporte-sipecom.json` (puerto y agentes elegidos).
-
-Catálogo de proyectos: `~/.soporte-sipecom/catalogo.yaml`.
+| `sipecom-soporte` | Onboarding |
+| `sipecom-soporte doctor` | Mismas 4 familias, formato corto |
+| `sipecom-soporte models` | Modelos de cada CLI |
+| `sipecom-soporte dashboard` | Consola en localhost:2121 |
+| `sipecom-soporte ui` | Alias de dashboard |
 
 ## Documentación
 
-| Documento | Contenido |
-| --- | --- |
-| [docs/README.md](docs/README.md) | Índice |
-| [docs/instalacion.md](docs/instalacion.md) | Instalación y doctor |
-| [docs/cli.md](docs/cli.md) | Referencia de comandos |
-| [docs/dashboard.md](docs/dashboard.md) | Consola local |
-| [docs/agentes.md](docs/agentes.md) | Grok, Antigravity, Codex |
-| [docs/arquitectura.md](docs/arquitectura.md) | Módulos y flujo |
-
-## Licencia
-
-Uso interno SIPECOM salvo que el repositorio declare otra.
+[docs/README.md](docs/README.md)

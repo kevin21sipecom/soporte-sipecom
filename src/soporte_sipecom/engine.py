@@ -62,19 +62,22 @@ def build_prompt(proyecto: dict, pregunta: str, adjuntos: list[Path]) -> str:
     adj = "\n".join(f"- {p}" for p in adjuntos) or "(ninguno)"
     cg = which("codegraph") or "codegraph"
     return f"""Responde en español, breve y citado, SOLO a esta consulta.
-No leas MAPA.md ni RECETA.md. El contexto es el código (origen), el pack Repomix y CodeGraph.
+El proyecto se entiende por origen + pack Repomix (grep/lee por path, NO lo vuelques) + CodeGraph (query/explore).
+Así no se pierde el contexto del código. No leas MAPA.md ni RECETA.md.
 No modifiques archivos. No inventes SOAP, endpoints ni pantallas.
 Si no está en origen/pack/grafo, dilo. Cita archivo:línea.
 
-Origen: {origen}
-Pack Repomix (grep/lee por path, no lo vuelques): {pack}
-CodeGraph CLI: {cg}  (query/explore sobre el origen)
+Las imágenes de ESTA conversación siguen vigentes; no las pidas de nuevo. Si hay una nueva, úsala junto con las anteriores.
 
-Adjuntos:
+Origen: {origen}
+Pack Repomix: {pack}
+CodeGraph CLI: {cg}
+
+Imágenes de esta conversación:
 {adj}
 
 Consulta:
-{pregunta or "(sin texto; interpreta los adjuntos)"}
+{pregunta or "(sin texto; interpreta las imágenes)"}
 """
 
 

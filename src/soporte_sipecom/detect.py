@@ -58,8 +58,11 @@ def _which_one(name: str) -> str | None:
         _home() / ".grok" / "bin" / exe,
         _home() / "AppData" / "Local" / "Programs" / "OpenAI" / "Codex" / "bin" / exe,
         _localappdata() / "agy" / "bin" / exe,
-        _home() / "scoop" / "shims" / exe,
+        _localappdata() / "codegraph" / "current" / "bin" / exe,
         _localappdata() / "hermes" / "node" / exe,
+        _home() / "scoop" / "shims" / exe,
+        _home() / "AppData" / "Roaming" / "npm" / exe,
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "nodejs" / exe,
         _home() / ".local" / "bin" / name,
     ]
     for path in extra:
