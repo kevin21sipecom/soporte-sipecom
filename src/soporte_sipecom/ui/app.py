@@ -243,51 +243,55 @@ with st.sidebar:
 
     st.subheader("Motor")
     if modo == "CLI local":
-        clis = list(VALID_AGENTS)
-        preferred = cfg.get("last_agent") if cfg.get("last_agent") in clis else None
-        if not preferred:
-            preferred = next((a for a in live_agents if a in clis), clis[0])
-        motor = st.selectbox("CLI", clis, index=clis.index(preferred), key="cli_agent")
-        if motor and motor != cfg.get("last_agent"):
-            cfg["last_agent"] = motor
-            cfg["agents"] = live_agents or list(VALID_AGENTS)
-            save_cfg(cfg)
-        if not which(motor):
-            st.caption(f"{motor} no está en esta PC. El resto de CLIs sí se pueden elegir.")
-        else:
-            st.caption("Sesión local. Modelos = listado vivo de esa CLI.")
-        rows = list_models(motor)
-        ids = [m.id for m in rows]
-        labels = {
-            m.id: (f"{m.label} ({m.id})" if m.label and m.label != m.id else m.id)
-            for m in rows
-        }
-        if ids:
-            default_id = next((m.id for m in rows if m.default), ids[0])
-            modelo = st.selectbox(
-                "Modelo",
-                ids,
-                index=ids.index(default_id) if default_id in ids else 0,
-                format_func=lambda mid: labels.get(mid, mid),
-                key=f"cli_model_{motor}",
-            )
-            efforts = list_efforts(motor, modelo, rows)
-            if efforts:
-                effort_idx = efforts.index("medium") if "medium" in efforts else 0
-                effort = st.selectbox(
-                    "Effort",
-                    efforts,
-                    index=effort_idx,
-                    key=f"cli_effort_{motor}_{modelo}",
-                )
-            else:
-                effort = baked_effort(modelo) or ""
-                if effort:
-                    st.caption(f"Effort ya va en el modelo (`{effort}`).")
-        else:
+        clis = list(live_agents)
+        if not clis:
+            st.warning("No hay grok, antigravity ni codex en esta PC.")
+            motor = ""
             modelo = ""
             effort = "medium"
-            st.warning("Esta CLI no devolvió modelos. Revisa instalación o `sipecom-soporte models`.")
+        else:
+            preferred = cfg.get("last_agent") if cfg.get("last_agent") in clis else clis[0]
+            motor = st.selectbox("CLI", clis, index=clis.index(preferred), key="cli_agent")
+            if motor and motor != cfg.get("last_agent"):
+                cfg["last_agent"] = motor
+                cfg["agents"] = clis
+                save_cfg(cfg)
+            if len(clis) == 1:
+                st.caption(f"Única CLI detectada: `{motor}`.")
+            else:
+                st.caption("Sesión local. Modelos = listado vivo de esa CLI.")
+            rows = list_models(motor)
+            ids = [m.id for m in rows]
+            labels = {
+                m.id: (f"{m.label} ({m.id})" if m.label and m.label != m.id else m.id)
+                for m in rows
+            }
+            if ids:
+                default_id = next((m.id for m in rows if m.default), ids[0])
+                modelo = st.selectbox(
+                    "Modelo",
+                    ids,
+                    index=ids.index(default_id) if default_id in ids else 0,
+                    format_func=lambda mid: labels.get(mid, mid),
+                    key=f"cli_model_{motor}",
+                )
+                efforts = list_efforts(motor, modelo, rows)
+                if efforts:
+                    effort_idx = efforts.index("medium") if "medium" in efforts else 0
+                    effort = st.selectbox(
+                        "Effort",
+                        efforts,
+                        index=effort_idx,
+                        key=f"cli_effort_{motor}_{modelo}",
+                    )
+                else:
+                    effort = baked_effort(modelo) or ""
+                    if effort:
+                        st.caption(f"Effort ya va en el modelo (`{effort}`).")
+            else:
+                modelo = ""
+                effort = "medium"
+                st.warning("Esta CLI no devolvió modelos. Revisa instalación o `sipecom-soporte models`.")
     else:
         motor = "grok"
         st.selectbox("Proveedor", API_PROVIDERS)
