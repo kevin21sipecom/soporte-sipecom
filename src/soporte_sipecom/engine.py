@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from soporte_sipecom.detect import which
+from soporte_sipecom.detect import agent_binary, which
 from soporte_sipecom.models import clamp_effort, list_efforts
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
@@ -99,13 +99,11 @@ def run_engine(
 ) -> tuple[str, str, str]:
     prompt = build_prompt(proyecto, pregunta, adjuntos)
     origen = proyecto.get("origen") or str(Path.home())
-    grok = which("grok")
-    codex = which("codex")
-    agy = which("antigravity")
     images = [p for p in adjuntos if p.suffix.lower() in IMAGE_EXT]
     shown_cmd = ""
     env = cli_env()
     name = (engine or "").strip().lower()
+    binary = agent_binary(name)
     allowed = list_efforts(name, model)
     effort = clamp_effort(name, effort, allowed)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as handle:
@@ -113,10 +111,10 @@ def run_engine(
         prompt_path = handle.name
     try:
         if name == "grok":
-            if not grok:
+            if not binary:
                 return "grok no está en PATH", "none", ""
             cmd = [
-                grok,
+                binary,
                 "--prompt-file",
                 prompt_path,
                 "-m",
@@ -125,8 +123,7 @@ def run_engine(
                 effort,
                 "--output-format",
                 "plain",
-                "--permission-mode",
-                "bypassPermissions",
+                "--always-approve",
                 "--disable-web-search",
                 "--max-turns",
                 "4",
@@ -134,11 +131,10 @@ def run_engine(
                 origen,
             ]
         elif name == "antigravity":
-            if not agy:
+            if not binary:
                 return "antigravity (agy) no está en PATH", "none", ""
             cmd = [
-                agy,
-                "--print",
+                binary,
                 "--model",
                 model,
                 "--effort",
@@ -151,13 +147,14 @@ def run_engine(
                 origen,
                 "--print-timeout",
                 f"{max(30, timeout_s)}s",
+                "--print",
                 prompt,
             ]
         elif name == "codex":
-            if not codex:
+            if not binary:
                 return "codex no está en PATH", "none", ""
             cmd = [
-                codex,
+                binary,
                 "exec",
                 "--skip-git-repo-check",
                 "-m",

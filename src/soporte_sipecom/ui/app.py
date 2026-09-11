@@ -1,9 +1,10 @@
 """Consola SIPECOM-SOPORTE. Chat nativo Streamlit (chat_input + sidebar)."""
 from __future__ import annotations
 
+import importlib
+import time
 from datetime import datetime
 from pathlib import Path
-import time
 
 import streamlit as st
 import yaml
@@ -11,9 +12,14 @@ import yaml
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg
 from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.detect import which
-from soporte_sipecom.engine import run_engine
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
 from soporte_sipecom.models import list_efforts, list_models
+import soporte_sipecom.detect as _detect_mod
+import soporte_sipecom.engine as _engine_mod
+
+importlib.reload(_detect_mod)
+_engine_mod = importlib.reload(_engine_mod)
+run_engine = _engine_mod.run_engine
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"

@@ -30,7 +30,7 @@ No combinar `-p` vacío con `--prompt-file`.
 Binario: `agy`. En la UI el nombre es `antigravity`.
 
 ```text
-agy --print --model <modelo> --effort <low|medium|high> --dangerously-skip-permissions --disable-slash-commands --output-format text --add-dir <origen> --print-timeout <Ns> <prompt>
+agy --model <modelo> --effort <low|medium|high> --dangerously-skip-permissions --disable-slash-commands --output-format text --add-dir <origen> --print-timeout <Ns> --print <prompt>
 ```
 
 Si el usuario pide `xhigh` / `max` / `ultra`, se recorta a `high` (la CLI no documenta esos valores).

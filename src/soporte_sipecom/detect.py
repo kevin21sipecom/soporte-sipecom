@@ -76,6 +76,24 @@ def which(name: str) -> str | None:
     return None
 
 
+def agent_binary(name: str) -> str | None:
+    """Binario de esa CLI. No mezclar stems (agy nunca puede ser codex)."""
+    name = (name or "").strip().lower()
+    if name == "antigravity":
+        path = _which_one("agy") or _which_one("antigravity")
+        stem = Path(path).stem.lower() if path else ""
+        if stem in {"agy", "antigravity"}:
+            return path
+        return None
+    if name == "grok":
+        path = _which_one("grok")
+        return path if path and Path(path).stem.lower() == "grok" else None
+    if name == "codex":
+        path = _which_one("codex")
+        return path if path and Path(path).stem.lower() == "codex" else None
+    return which(name)
+
+
 def which_node() -> str | None:
     return which("node")
 
