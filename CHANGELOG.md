@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- Índice de conversaciones centrado en vertical.
+
 ## 0.5.3
 
 - Ticks del índice: 2px de ancho (el CSS ahora pega al `button` de Streamlit).

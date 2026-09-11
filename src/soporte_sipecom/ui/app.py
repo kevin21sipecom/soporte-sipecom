@@ -108,7 +108,8 @@ st.markdown(
 [class*="st-key-sipe_index"] {
   position: fixed !important;
   right: 6px !important;
-  top: 4.6rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   width: 6px !important;
   max-width: 6px !important;
   z-index: 60;
