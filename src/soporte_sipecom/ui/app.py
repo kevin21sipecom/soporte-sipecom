@@ -13,6 +13,7 @@ from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_
 from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
+from soporte_sipecom.maps import existing_artifacts, render_mapa
 from soporte_sipecom.onboard import HINTS, detected_agents, probe_node, probe_npm
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
@@ -169,12 +170,6 @@ with st.sidebar:
                 st.caption(hint)
         st.caption("CodeGraph + Repomix = contexto del proyecto (sin volcar el pack).")
 
-    if st.button("Nueva conversación"):
-        st.session_state.messages = []
-        st.session_state.conversation_images = []
-        st.session_state.chat_id = str(int(time.time() * 1000))
-        st.rerun()
-
     conv_imgs = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
     if conv_imgs:
         with st.expander(f"Imágenes de esta conversación ({len(conv_imgs)})", expanded=False):
@@ -268,21 +263,94 @@ if not proyecto:
     st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
     st.stop()
 
-for item in st.session_state.messages:
-    if item["role"] == "user":
-        if item.get("content"):
-            st.markdown(item["content"])
-        for path in item.get("adjuntos") or []:
-            p = Path(path)
-            if p.suffix.lower() in IMAGE_EXT and p.is_file():
-                st.image(str(p), caption=p.name)
-        continue
-    kwargs = {"avatar": str(SIPI)} if SIPI.is_file() else {}
-    with st.chat_message("assistant", **kwargs):
-        if item.get("content"):
-            st.markdown(item["content"])
-        if item.get("motor"):
-            st.caption(f"motor: `{item['motor']}`")
+top_l, top_r = st.columns([3, 2], vertical_alignment="center")
+with top_l:
+    vista = st.segmented_control(
+        "Vista",
+        options=["Chat", "Mapa"],
+        default="Chat",
+        key="vista_principal",
+        label_visibility="collapsed",
+    )
+    if not vista:
+        vista = "Chat"
+with top_r:
+    idx_col, new_col = st.columns(2)
+    with idx_col:
+        preguntas = [
+            (i, (item.get("content") or "").strip())
+            for i, item in enumerate(st.session_state.messages)
+            if item.get("role") == "user" and (item.get("content") or "").strip()
+        ]
+        with st.popover(f"Índice ({len(preguntas)})"):
+            if not preguntas:
+                st.caption("Aún no hay preguntas en este hilo.")
+            for i, texto in preguntas:
+                label = texto.replace("\n", " ")[:56]
+                if st.button(label, key=f"jump_{i}", width="stretch"):
+                    st.session_state.jump_to = i
+                    st.rerun()
+    with new_col:
+        if st.button("Nueva conversación", width="stretch"):
+            st.session_state.messages = []
+            st.session_state.conversation_images = []
+            st.session_state.jump_to = None
+            st.session_state.chat_id = str(int(time.time() * 1000))
+            st.rerun()
+
+if vista == "Mapa":
+    st.subheader("Mapa")
+    st.caption("Archify a partir de CodeGraph + pack. Sin inventar topología.")
+    arts = existing_artifacts(proyecto)
+    pngs = [p for p in arts if p.suffix.lower() in {".png", ".webp"}]
+    htmls = [p for p in arts if p.suffix.lower() == ".html"]
+    if pngs:
+        st.image(str(pngs[0]), use_container_width=True)
+    elif htmls:
+        import streamlit.components.v1 as components
+
+        raw = htmls[0].read_text(encoding="utf-8", errors="replace")
+        components.html(raw, height=720, scrolling=True)
+    else:
+        st.info("Todavía no hay mapa de este proyecto.")
+    if st.button("Armar mapa", type="primary"):
+        try:
+            with st.status("CodeGraph + Archify", expanded=True) as status:
+                result = render_mapa(proyecto)
+                status.update(label="Mapa listo", state="complete")
+            catalog = load_catalog()
+            for item in catalog.get("proyectos") or []:
+                if item.get("id") == proyecto.get("id"):
+                    item["mapa_html"] = result.get("html")
+                    if result.get("png"):
+                        item["mapa_png"] = result["png"]
+            save_catalog(catalog)
+            st.rerun()
+        except Exception as exc:
+            st.error(str(exc)[-1500:])
+    st.stop()
+
+jump = st.session_state.get("jump_to")
+for idx, item in enumerate(st.session_state.messages):
+    highlight = jump is not None and idx == jump
+    box = st.container(border=highlight)
+    with box:
+        if highlight:
+            st.caption(f"Pregunta #{idx + 1}")
+        if item["role"] == "user":
+            if item.get("content"):
+                st.markdown(item["content"])
+            for path in item.get("adjuntos") or []:
+                p = Path(path)
+                if p.suffix.lower() in IMAGE_EXT and p.is_file():
+                    st.image(str(p), caption=p.name)
+            continue
+        kwargs = {"avatar": str(SIPI)} if SIPI.is_file() else {}
+        with st.chat_message("assistant", **kwargs):
+            if item.get("content"):
+                st.markdown(item["content"])
+            if item.get("motor"):
+                st.caption(f"motor: `{item['motor']}`")
 
 prompt = st.chat_input(
     "Escribe un mensaje",
