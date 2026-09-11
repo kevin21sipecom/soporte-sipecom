@@ -104,52 +104,65 @@ st.markdown(
 [data-testid="stSidebar"] [data-testid="stSegmentedControl"] button {
   flex: 1 1 0 !important;
 }
-.st-key-sipe_index {
+.st-key-sipe_index,
+[class*="st-key-sipe_index"] {
   position: fixed !important;
-  right: 8px !important;
+  right: 6px !important;
   top: 4.6rem !important;
-  width: 8px !important;
-  max-width: 8px !important;
+  width: 6px !important;
+  max-width: 6px !important;
   z-index: 60;
   height: auto !important;
   min-height: 0 !important;
 }
-.st-key-sipe_index [data-testid="stVerticalBlock"] {
-  gap: 0.2rem !important;
+.st-key-sipe_index [data-testid="stVerticalBlock"],
+[class*="st-key-sipe_index"] [data-testid="stVerticalBlock"] {
+  gap: 0.18rem !important;
 }
-.st-key-sipe_index .stButton {
+.st-key-sipe_index *,
+[class*="st-key-sipe_index"] *,
+[class*="st-key-rail"] {
   min-height: 0 !important;
-  width: 8px !important;
+  min-width: 0 !important;
 }
-.st-key-sipe_index .stButton > button {
-  width: 3px !important;
-  min-width: 3px !important;
-  height: 10px !important;
-  min-height: 10px !important;
+.st-key-sipe_index button,
+[class*="st-key-sipe_index"] button,
+[class*="st-key-rail"] button {
+  width: 2px !important;
+  max-width: 2px !important;
+  min-width: 2px !important;
+  height: 7px !important;
+  max-height: 7px !important;
+  min-height: 7px !important;
   padding: 0 !important;
   margin: 0 auto !important;
   border: 0 !important;
-  border-radius: 2px !important;
-  background: #c5cad3 !important;
-  opacity: 0.4 !important;
+  border-radius: 1px !important;
+  background: #b4bac6 !important;
+  opacity: 0.55 !important;
   box-shadow: none !important;
   font-size: 0 !important;
   line-height: 0 !important;
   color: transparent !important;
 }
-.st-key-sipe_index .stButton > button p,
-.st-key-sipe_index .stButton > button span {
+.st-key-sipe_index button p,
+.st-key-sipe_index button span,
+[class*="st-key-sipe_index"] button p,
+[class*="st-key-sipe_index"] button span {
   display: none !important;
 }
-.st-key-sipe_index .stButton > button:hover {
-  opacity: 0.9 !important;
-  background: #9aa3b2 !important;
+.st-key-sipe_index button:hover,
+[class*="st-key-sipe_index"] button:hover {
+  opacity: 0.95 !important;
+  background: #8b93a3 !important;
 }
-.st-key-sipe_index .stButton > button[kind="primary"] {
+.st-key-sipe_index button[kind="primary"],
+[class*="st-key-sipe_index"] button[kind="primary"] {
   background: #5b6ee8 !important;
   opacity: 1 !important;
-  height: 12px !important;
-  min-height: 12px !important;
+  height: 9px !important;
+  max-height: 9px !important;
+  min-height: 9px !important;
 }
 </style>
 """,
