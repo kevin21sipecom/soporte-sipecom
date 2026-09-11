@@ -45,7 +45,7 @@ Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.
 2. **CodeGraph**, **Repomix**, **Archify**
 3. Agentes: grok / antigravity (`agy`) / codex
 
-Si falta algo, imprime el comando para instalarlo (`npm i -g @colbymchenry/codegraph`, `setx ARCHIFY_HOME …`, `npm install -g repomix`). Cuando todo está OK:
+Si falta CodeGraph, Repomix o Archify, pregunta s/n y los instala en el mismo onboarding. Cuando todo está OK:
 
 ```text
 sipecom-soporte dashboard

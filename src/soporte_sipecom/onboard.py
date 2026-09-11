@@ -11,6 +11,7 @@ from soporte_sipecom.detect import (
     which,
     which_node,
 )
+from soporte_sipecom.install_tools import AUTO_TOOLS, ask_yes_no, install_missing
 
 HINTS = {
     "node": "winget install OpenJS.NodeJS.LTS",
@@ -62,11 +63,16 @@ def onboard_report() -> tuple[list, bool]:
     return rows, families_ok
 
 
-def print_onboard() -> int:
-    rows, families_ok = onboard_report()
+def _print_rows(rows) -> None:
     print("\nOnboarding\n")
     current_family = None
-    titles = {"runtime": "Runtime", "codegraph": "Herramientas", "repomix": "Herramientas", "archify": "Herramientas", "agent": "Agentes (el dashboard elige cuál usar)"}
+    titles = {
+        "runtime": "Runtime",
+        "codegraph": "Herramientas",
+        "repomix": "Herramientas",
+        "archify": "Herramientas",
+        "agent": "Agentes (el dashboard elige cuál usar)",
+    }
     for probe in rows:
         family = probe.family
         title = titles.get(family, family)
@@ -89,12 +95,19 @@ def print_onboard() -> int:
                     if h:
                         print(f"              → {h}")
     print()
-    if families_ok:
-        print("Todo OK. Siguiente:  sipecom-soporte dashboard")
-        return 0
+
+
+def _missing_auto(rows) -> list[str]:
+    missing = [p.name for p in rows if not p.ok and p.name in AUTO_TOOLS]
+    npm_ok = any(p.name == "npm" and p.ok for p in rows)
+    if not npm_ok:
+        missing = [n for n in missing if n == "archify"]
+    return missing
+
+
+def _print_manual(rows) -> None:
     missing = [p.name for p in rows if not p.ok and p.name in HINTS]
     cmds = [HINTS[n] for n in missing if n in {"node", "npm", "codegraph", "repomix", "archify"}]
-    # npm y node comparten instalador; no duplicar
     seen: list[str] = []
     for cmd in cmds:
         if cmd not in seen:
@@ -108,5 +121,30 @@ def print_onboard() -> int:
         print("Cierra y abre la terminal. Luego:  sipecom-soporte")
     else:
         print("Instala lo que marca NO y vuelve a correr:  sipecom-soporte")
+
+
+def print_onboard() -> int:
+    rows, families_ok = onboard_report()
+    _print_rows(rows)
+    if families_ok:
+        print("Todo OK. Siguiente:  sipecom-soporte dashboard")
+        return 0
+
+    auto = _missing_auto(rows)
+    if auto:
+        names = ", ".join(auto)
+        answer = ask_yes_no(f"¿Instalar ahora {names}?")
+        if answer is True:
+            install_missing(auto)
+            print()
+            rows, families_ok = onboard_report()
+            _print_rows(rows)
+            if families_ok:
+                print("Todo OK. Siguiente:  sipecom-soporte dashboard")
+                return 0
+        elif answer is False:
+            print("Sin instalar. Puedes hacerlo después con los comandos de abajo.\n")
+
+    _print_manual(rows)
     print("El dashboard elige grok / antigravity / codex; no hace falta `select`.")
     return 1

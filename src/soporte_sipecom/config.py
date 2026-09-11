@@ -22,6 +22,7 @@ def load() -> dict:
     data.setdefault("port", DEFAULT_PORT)
     data.setdefault("agents", [])
     data.setdefault("last_agent", "")
+    data.setdefault("archify_home", "")
     return data
 
 
@@ -31,6 +32,7 @@ def save(data: dict) -> Path:
         "port": int(data.get("port") or DEFAULT_PORT),
         "agents": list(data.get("agents") or []),
         "last_agent": data.get("last_agent") or "",
+        "archify_home": data.get("archify_home") or "",
     }
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return path

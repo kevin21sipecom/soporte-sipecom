@@ -1,6 +1,6 @@
 [project]
 name = "sipecom-soporte"
-version = "0.4.1"
+version = "0.5.0"
 description = "SIPECOM-SOPORTE: CLI global y dashboard local (127.0.0.1:2121)."
 readme = "README.md"
 authors = [

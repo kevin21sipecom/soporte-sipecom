@@ -42,21 +42,19 @@ uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
 
 ## Onboarding
 
-`sipecom-soporte` valida las piezas y, si faltan, imprime el comando para instalarlas.
+`sipecom-soporte` valida las piezas. Si faltan CodeGraph, Repomix o Archify, pregunta **s/n** e instala en el mismo onboarding (hace falta npm). Los agentes (grok / agy / codex) no se instalan solos.
 
-Usa **PowerShell normal** (no Administrador). Luego cierra y abre la terminal.
+Usa **PowerShell normal** (no Administrador).
 
-### CodeGraph
+### CodeGraph (automático con `s`)
 
 ```text
 npm i -g @colbymchenry/codegraph
 ```
 
-Comprueba: `codegraph --version`
+### Archify (automático con `s`)
 
-### Archify
-
-No es un paquete npm. Es el CLI `bin/archify.mjs`. Con Hermes ya está en esa carpeta:
+Copia la skill a `%LOCALAPPDATA%\sipecom-soporte\archify` si ya está Hermes. Si no hay skill en la PC, no puede inventarla.
 
 ```text
 setx ARCHIFY_HOME "%LOCALAPPDATA%\hermes\skills\creative\archify"

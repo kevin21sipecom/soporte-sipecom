@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Onboarding pregunta s/n e instala CodeGraph, Repomix y Archify sin salir.
+
 ## 0.4.1
 
 - Doctor imprime comandos de instalación de CodeGraph y Archify.

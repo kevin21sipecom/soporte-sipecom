@@ -188,10 +188,19 @@ def archify_root() -> Path | None:
         candidates.append(Path(hermes_skills) / "creative" / "archify")
     candidates.extend(
         [
+            _localappdata() / "sipecom-soporte" / "archify",
             _localappdata() / "hermes" / "skills" / "creative" / "archify",
             _home() / ".hermes" / "skills" / "creative" / "archify",
         ]
     )
+    try:
+        from soporte_sipecom.config import load as _load_cfg
+
+        home = (_load_cfg().get("archify_home") or "").strip()
+        if home:
+            candidates.insert(0, Path(home))
+    except Exception:
+        pass
     which_bin = which("archify")
     if which_bin:
         # bin/archify.mjs → skill root
