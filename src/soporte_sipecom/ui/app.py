@@ -9,10 +9,11 @@ import streamlit as st
 import yaml
 
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg
-from soporte_sipecom.detect import VALID_AGENTS, which
+from soporte_sipecom.constants import VALID_AGENTS
+from soporte_sipecom.detect import which
 from soporte_sipecom.engine import run_engine
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
-from soporte_sipecom.models import default_model_id, list_efforts, list_models
+from soporte_sipecom.models import list_efforts, list_models
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
@@ -127,30 +128,35 @@ with st.sidebar:
 
     st.subheader("Motor")
     if modo == "CLI local":
-        detected = [a for a in VALID_AGENTS if which(a)]
-        clis = [a for a in saved_agents if a in VALID_AGENTS and a in detected] or detected
-        if not clis:
-            st.warning("No hay grok, antigravity ni codex en esta PC.")
-            motor = ""
+        clis = list(VALID_AGENTS)
+        preferred = next((a for a in saved_agents if a in clis), clis[0])
+        motor = st.selectbox("CLI", clis, index=clis.index(preferred), key="cli_agent")
+        if not which(motor):
+            st.caption(f"{motor} no está en esta PC. El resto de CLIs sí se pueden elegir.")
+        else:
+            st.caption("Sesión local. Modelos = listado vivo de esa CLI.")
+        rows = list_models(motor)
+        ids = [m.id for m in rows]
+        labels = {
+            m.id: (f"{m.label} ({m.id})" if m.label and m.label != m.id else m.id)
+            for m in rows
+        }
+        if ids:
+            default_id = next((m.id for m in rows if m.default), ids[0])
+            modelo = st.selectbox(
+                "Modelo",
+                ids,
+                index=ids.index(default_id) if default_id in ids else 0,
+                format_func=lambda mid: labels.get(mid, mid),
+                key=f"cli_model_{motor}",
+            )
+            efforts = list_efforts(motor, modelo, rows)
+            effort_idx = efforts.index("medium") if "medium" in efforts else 0
+            effort = st.selectbox("Effort", efforts, index=effort_idx, key=f"cli_effort_{motor}_{modelo}")
+        else:
             modelo = ""
             effort = "medium"
-        else:
-            motor = st.selectbox("CLI", clis)
-            st.caption("Sesión de esta PC. Sin API keys. Modelos leídos de la CLI.")
-            with st.spinner("Leyendo modelos…"):
-                infos = list_models(motor)
-            ids = [m.id for m in infos]
-            if ids:
-                idx = ids.index(default_model_id(infos)) if default_model_id(infos) in ids else 0
-                modelo = st.selectbox("Modelo", ids, index=idx)
-            else:
-                modelo = ""
-                st.caption("Esta CLI no devolvió modelos. Escribe el id abajo.")
-            extra = st.text_input("Modelo extra (opcional)", placeholder="id de modelo")
-            if extra.strip():
-                modelo = extra.strip()
-            efforts = list_efforts(motor, modelo, infos if ids else None)
-            effort = st.selectbox("Effort", efforts, index=min(1, len(efforts) - 1) if efforts else 0)
+            st.warning("Esta CLI no devolvió modelos. Revisa instalación o `sipecom-soporte models`.")
     else:
         motor = "grok"
         st.selectbox("Proveedor", API_PROVIDERS)

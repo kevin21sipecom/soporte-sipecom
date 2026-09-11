@@ -16,11 +16,9 @@ import subprocess
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from soporte_sipecom.constants import AGENT_ALIASES, VALID_AGENTS
+
 WIN = os.name == "nt"
-VALID_AGENTS = ("grok", "antigravity", "codex")
-AGENT_ALIASES = {
-    "antigravity": ("antigravity", "agy"),
-}
 
 
 @dataclass

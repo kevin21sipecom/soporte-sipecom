@@ -7,7 +7,8 @@ import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from soporte_sipecom.detect import VALID_AGENTS, run_cmd, which
+from soporte_sipecom.constants import VALID_AGENTS
+from soporte_sipecom.detect import run_cmd, which
 
 CACHE_TTL_S = 600
 GROK_EFFORTS = ["low", "medium", "high", "xhigh"]

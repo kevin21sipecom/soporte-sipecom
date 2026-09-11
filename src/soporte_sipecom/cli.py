@@ -9,7 +9,8 @@ from pathlib import Path
 
 from soporte_sipecom.banner import banner
 from soporte_sipecom.config import DEFAULT_PORT, config_path, load, save
-from soporte_sipecom.detect import VALID_AGENTS, doctor, probe_agent
+from soporte_sipecom.constants import VALID_AGENTS
+from soporte_sipecom.detect import doctor, probe_agent
 from soporte_sipecom.models import list_models
 
 
