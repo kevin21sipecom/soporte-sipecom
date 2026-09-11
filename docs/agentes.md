@@ -45,4 +45,4 @@ Los orígenes pueden no ser git: hace falta `--skip-git-repo-check`. El catálog
 
 ## Auth
 
-Cada CLI usa su sesión local. El modo «CLI local» no envía API keys. El modo «API key» de la UI aún no ejecuta remoto.
+Todas las CLIs (grok, antigravity, codex) reciben **el mismo** prompt interno: origen + pack + CodeGraph, no inventar contratos, no recitar las reglas, imágenes de la conversación. Codex lee el archivo; Grok `--prompt-file`; Antigravity `--print`.
