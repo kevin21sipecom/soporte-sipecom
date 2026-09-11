@@ -25,3 +25,7 @@ uv run soporte ui
 Consola Streamlit (diseño SIPECOM, puerto **2121**): header, Sipi, sidebar de motor, tabs Terminal/Mapas/Receta. CLI local, sin API keys.
 
 Config: `~/.soporte-sipecom.json`
+
+## Consola
+
+![Consola SIPECOM-SOPORTE](docs/consola-ui.png)
