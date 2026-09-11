@@ -6,6 +6,16 @@ La UI es **localhost** (`127.0.0.1:2121`). Sin túnel.
 
 ![Consola SIPECOM-SOPORTE](docs/consola-ui.png)
 
+## Instalar uv
+
+Windows (PowerShell):
+
+```text
+powershell -ExecutionPolicy Bypass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Cierra y abre la terminal, luego `uv --version`.
+
 ## Instalar en toda la PC
 
 No hace falta `cd` al repo para usarlo. Instálalo como herramienta de `uv`:

@@ -1,5 +1,21 @@
 # Instalación (toda la PC)
 
+## Instalar uv
+
+Windows (PowerShell):
+
+```text
+powershell -ExecutionPolicy Bypass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Cierra y abre la terminal. Comprueba:
+
+```text
+uv --version
+```
+
+Docs: https://docs.astral.sh/uv/getting-started/installation/
+
 ## Producto
 
 ```text
