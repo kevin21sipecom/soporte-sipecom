@@ -104,47 +104,52 @@ st.markdown(
 [data-testid="stSidebar"] [data-testid="stSegmentedControl"] button {
   flex: 1 1 0 !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child {
-  max-width: 1.15rem !important;
-  min-width: 1.15rem !important;
-  width: 1.15rem !important;
-  padding: 0.15rem 0 0 0 !important;
-}
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child [data-testid="stVerticalBlock"] {
-  gap: 0.28rem !important;
-}
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton {
+.st-key-sipe_index {
+  position: fixed !important;
+  right: 8px !important;
+  top: 4.6rem !important;
+  width: 8px !important;
+  max-width: 8px !important;
+  z-index: 60;
+  height: auto !important;
   min-height: 0 !important;
-  width: 100% !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button {
-  width: 0.42rem !important;
-  min-width: 0.42rem !important;
-  height: 1.15rem !important;
-  min-height: 1.15rem !important;
+.st-key-sipe_index [data-testid="stVerticalBlock"] {
+  gap: 0.2rem !important;
+}
+.st-key-sipe_index .stButton {
+  min-height: 0 !important;
+  width: 8px !important;
+}
+.st-key-sipe_index .stButton > button {
+  width: 3px !important;
+  min-width: 3px !important;
+  height: 10px !important;
+  min-height: 10px !important;
   padding: 0 !important;
   margin: 0 auto !important;
   border: 0 !important;
-  border-radius: 0.28rem !important;
-  justify-content: center !important;
-  background: #d8dce6 !important;
-  opacity: 0.45 !important;
+  border-radius: 2px !important;
+  background: #c5cad3 !important;
+  opacity: 0.4 !important;
   box-shadow: none !important;
   font-size: 0 !important;
   line-height: 0 !important;
   color: transparent !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button p,
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button span {
+.st-key-sipe_index .stButton > button p,
+.st-key-sipe_index .stButton > button span {
   display: none !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button:hover {
-  opacity: 0.85 !important;
-  background: #c5cad6 !important;
+.st-key-sipe_index .stButton > button:hover {
+  opacity: 0.9 !important;
+  background: #9aa3b2 !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button[kind="primary"] {
+.st-key-sipe_index .stButton > button[kind="primary"] {
   background: #5b6ee8 !important;
-  opacity: 0.95 !important;
+  opacity: 1 !important;
+  height: 12px !important;
+  min-height: 12px !important;
 }
 </style>
 """,
@@ -311,24 +316,38 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-body, rail = st.columns([48, 1], gap="small")
-with rail:
-    pid = (proyecto or {}).get("id") or ""
-    if st.button(" ", help="Nueva conversación", key="rail_new"):
+pid = (proyecto or {}).get("id") or ""
+has_user = any(
+    (m.get("role") == "user") and (m.get("content") or "").strip()
+    for m in st.session_state.get("messages") or []
+)
+with st.container(key="sipe_index"):
+    if st.button(
+        "\u200b",
+        help="Nueva conversación",
+        key="rail_new",
+        type="primary" if not has_user else "secondary",
+    ):
         persist_chat(pid)
         st.session_state.chat_id = new_id()
         st.session_state.messages = []
         st.session_state.conversation_images = []
         st.session_state.jump_to = None
         st.rerun()
+    seen_ids: set[str] = set()
     for item in load_index()[:24]:
         cid = item.get("id") or ""
-        if not cid:
+        if not cid or cid in seen_ids:
             continue
+        seen_ids.add(cid)
         title = item.get("title") or "Nueva conversación"
+        if cid == st.session_state.chat_id and not has_user:
+            continue
+        if title == "Nueva conversación" and cid != st.session_state.chat_id:
+            continue
         active = cid == st.session_state.chat_id
         if st.button(
-            " ",
+            "\u200b",
             help=title,
             key=f"rail_{cid}",
             type="primary" if active else "secondary",
@@ -342,11 +361,11 @@ with rail:
                 st.session_state.jump_to = None
                 st.rerun()
 
-with body:
-    if not proyecto:
-        st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
-        st.stop()
+if not proyecto:
+    st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
+    st.stop()
 
+if True:
     vista = st.segmented_control(
         "Vista",
         options=["Chat", "Mapa"],

@@ -24,7 +24,18 @@ def load_index() -> list[dict]:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return []
-    return data if isinstance(data, list) else []
+    items = data if isinstance(data, list) else []
+    seen: set[str] = set()
+    unique: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        cid = str(item.get("id") or "")
+        if not cid or cid in seen:
+            continue
+        seen.add(cid)
+        unique.append(item)
+    return unique
 
 
 def save_index(items: list[dict]) -> None:

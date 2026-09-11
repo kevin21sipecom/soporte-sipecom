@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+
+- Índice a la derecha: un solo rail, ticks más finos, sin duplicar.
+
 ## 0.5.1
 
 - Índice de conversaciones a la derecha, ticks muy chicos.
