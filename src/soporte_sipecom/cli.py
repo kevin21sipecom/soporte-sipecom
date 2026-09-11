@@ -9,7 +9,8 @@ from pathlib import Path
 
 from soporte_sipecom.banner import banner
 from soporte_sipecom.config import DEFAULT_PORT, config_path, load, save
-from soporte_sipecom.detect import doctor, probe_agent
+from soporte_sipecom.detect import VALID_AGENTS, doctor, probe_agent
+from soporte_sipecom.models import list_models
 
 
 def _print_doctor(probes, *, as_json: bool) -> int:
@@ -41,9 +42,8 @@ def _print_doctor(probes, *, as_json: bool) -> int:
 
 
 def _usable_agents() -> list[dict]:
-    names = ("codex", "grok", "claude")
     out = []
-    for name in names:
+    for name in VALID_AGENTS:
         probe = probe_agent(name)
         if probe.found:
             out.append(probe.as_dict())
@@ -54,7 +54,7 @@ def cmd_select(chosen: list[str] | None) -> int:
     found = _usable_agents()
     ok_names = [a["name"] for a in found if a.get("ok")]
     if not found:
-        print("No hay agentes CLI detectados (codex, grok, claude).")
+        print("No hay agentes CLI detectados (grok, antigravity, codex).")
         return 1
     print("Agentes detectados:")
     for i, item in enumerate(found, 1):
@@ -65,6 +65,11 @@ def cmd_select(chosen: list[str] | None) -> int:
         selected = []
         for name in chosen:
             name = name.strip().lower()
+            if name == "agy":
+                name = "antigravity"
+            if name not in VALID_AGENTS:
+                print(f"CLI no válida: {name}. Usa: grok, antigravity, codex")
+                return 1
             if name not in {a["name"] for a in found}:
                 print(f"no detectado: {name}")
                 return 1
@@ -84,6 +89,11 @@ def cmd_select(chosen: list[str] | None) -> int:
                         return 1
                     selected.append(found[idx]["name"])
                 else:
+                    if tok == "agy":
+                        tok = "antigravity"
+                    if tok not in VALID_AGENTS:
+                        print(f"CLI no válida: {tok}. Usa: grok, antigravity, codex")
+                        return 1
                     if tok not in {a["name"] for a in found}:
                         print(f"no detectado: {tok}")
                         return 1
@@ -113,11 +123,13 @@ def launch_dashboard(port: int) -> int:
         "127.0.0.1",
         "--server.port",
         str(port),
+        "--server.headless",
+        "true",
         "--browser.gatherUsageStats",
         "false",
     ]
     print(banner(port))
-    print(f"Dashboard → http://127.0.0.1:{port}")
+    print(f"Dashboard (solo localhost) → http://127.0.0.1:{port}")
     return subprocess.call(cmd)
 
 
@@ -138,8 +150,12 @@ def main(argv: list[str] | None = None) -> int:
     sel.add_argument(
         "--use",
         default="",
-        help="lista: grok,codex,claude (si se omite, pregunta o usa los OK)",
+        help="lista: grok,antigravity,codex (si se omite, pregunta o usa los OK)",
     )
+
+    models_p = sub.add_parser("models", help="Listar modelos de grok, antigravity y codex")
+    models_p.add_argument("--refresh", action="store_true")
+    models_p.add_argument("--json", action="store_true")
 
     sub.add_parser("config", help="Mostrar config (puerto + agentes)")
     sub.add_parser("dashboard", help="Abrir la consola Streamlit (esta UI)")
@@ -164,6 +180,26 @@ def main(argv: list[str] | None = None) -> int:
         print(banner(port))
         chosen = [x for x in args.use.split(",") if x.strip()] if args.use else None
         return cmd_select(chosen)
+
+    if args.cmd == "models":
+        print(banner(port))
+        payload = {}
+        for name in VALID_AGENTS:
+            infos = list_models(name, refresh=args.refresh)
+            payload[name] = [m.as_dict() for m in infos]
+            if not args.json:
+                print(f"\n{name}")
+                if not infos:
+                    print("  (sin modelos; CLI ausente o listado vacío)")
+                    continue
+                for item in infos:
+                    mark = "*" if item.default else "-"
+                    extra = f"  [{', '.join(item.efforts)}]" if item.efforts else ""
+                    label = f"  {item.label}" if item.label and item.label != item.id else ""
+                    print(f"  {mark} {item.id}{label}{extra}")
+        if args.json:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
 
     if args.cmd == "config":
         print(banner(port))

@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 from soporte_sipecom.detect import which
+from soporte_sipecom.models import clamp_effort, list_efforts
 
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 API_KEY_NAMES = {
@@ -24,7 +25,7 @@ def cli_env() -> dict[str, str]:
         if key in API_KEY_NAMES or key.endswith("_API_KEY"):
             env.pop(key, None)
     extras = []
-    for name in ("grok", "codex"):
+    for name in ("grok", "codex", "antigravity", "agy"):
         path = which(name)
         if path:
             extras.append(str(Path(path).parent))
@@ -100,15 +101,17 @@ def run_engine(
     origen = proyecto.get("origen") or str(Path.home())
     grok = which("grok")
     codex = which("codex")
+    agy = which("antigravity")
     images = [p for p in adjuntos if p.suffix.lower() in IMAGE_EXT]
-    errors: list[str] = []
     shown_cmd = ""
     env = cli_env()
+    name = (engine or "").strip().lower()
+    allowed = list_efforts(name, model)
+    effort = clamp_effort(name, effort, allowed)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".md", delete=False) as handle:
         handle.write(prompt)
         prompt_path = handle.name
     try:
-        name = engine
         if name == "grok":
             if not grok:
                 return "grok no está en PATH", "none", ""
@@ -130,7 +133,27 @@ def run_engine(
                 "--cwd",
                 origen,
             ]
-        else:
+        elif name == "antigravity":
+            if not agy:
+                return "antigravity (agy) no está en PATH", "none", ""
+            cmd = [
+                agy,
+                "--print",
+                "--model",
+                model,
+                "--effort",
+                effort,
+                "--dangerously-skip-permissions",
+                "--disable-slash-commands",
+                "--output-format",
+                "text",
+                "--add-dir",
+                origen,
+                "--print-timeout",
+                f"{max(30, timeout_s)}s",
+                prompt,
+            ]
+        elif name == "codex":
             if not codex:
                 return "codex no está en PATH", "none", ""
             cmd = [
@@ -150,6 +173,8 @@ def run_engine(
                 "Responde en español. No modifiques archivos. "
                 f"Lee y sigue el prompt en: {prompt_path}"
             )
+        else:
+            return f"CLI no soportada: {engine}", "none", ""
         shown_cmd = format_cmd(cmd)
         try:
             completed = subprocess.run(

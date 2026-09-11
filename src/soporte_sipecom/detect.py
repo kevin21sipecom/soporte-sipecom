@@ -6,7 +6,7 @@ sin abrir TUI.
 1. codegraph
 2. repomix
 3. archify  (CLI Node dentro de la skill Hermes, no hace falta el chat)
-4. agentes  (codex / grok / claude) — al menos uno headless
+4. agentes  (grok / antigravity / codex) — al menos uno headless
 """
 from __future__ import annotations
 
@@ -17,6 +17,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 WIN = os.name == "nt"
+VALID_AGENTS = ("grok", "antigravity", "codex")
+AGENT_ALIASES = {
+    "antigravity": ("antigravity", "agy"),
+}
 
 
 @dataclass
@@ -47,7 +51,7 @@ def _localappdata() -> Path:
     return _home() / "AppData" / "Local"
 
 
-def which(name: str) -> str | None:
+def _which_one(name: str) -> str | None:
     found = shutil.which(name)
     if found:
         return str(Path(found))
@@ -55,20 +59,22 @@ def which(name: str) -> str | None:
     extra = [
         _home() / ".grok" / "bin" / exe,
         _home() / "AppData" / "Local" / "Programs" / "OpenAI" / "Codex" / "bin" / exe,
+        _localappdata() / "agy" / "bin" / exe,
         _home() / "scoop" / "shims" / exe,
         _localappdata() / "hermes" / "node" / exe,
         _home() / ".local" / "bin" / name,
     ]
-    if name == "claude":
-        extra.extend(
-            [
-                _home() / "AppData" / "Roaming" / "npm" / exe,
-                _localappdata() / "hermes" / "node" / exe,
-            ]
-        )
     for path in extra:
         if path.is_file():
             return str(path)
+    return None
+
+
+def which(name: str) -> str | None:
+    for candidate in AGENT_ALIASES.get(name, (name,)):
+        found = _which_one(candidate)
+        if found:
+            return found
     return None
 
 
@@ -282,12 +288,15 @@ def probe_agent(name: str) -> Probe:
             detail = "binario ok; sesión grok login pendiente"
         if not headless:
             detail = "falta --prompt-file (headless)"
-    elif name == "claude":
+    elif name == "antigravity":
         hcode, hout = run_cmd([path, "--help"], timeout=8)
-        headless = hcode == 0 and ("-p" in hout or "--print" in hout or "print" in hout.lower())
+        extra["binary"] = Path(path).stem
         extra["help_ok"] = hcode == 0
+        headless = "--print" in hout and "--model" in hout
+        extra["print"] = "--print" in hout
+        extra["models_cmd"] = "models" in hout.lower()
         if not headless:
-            detail = "no se confirmó modo print/headless"
+            detail = "falta --print/--model (headless)"
     ok = code == 0 or (version is not None and "error" not in (version or "").lower())
     # grok --version can work while unauthenticated
     if name == "grok" and extra.get("auth") == "missing":
@@ -309,14 +318,14 @@ def probe_agent(name: str) -> Probe:
 
 
 def doctor() -> list[Probe]:
-    agents = [probe_agent(n) for n in ("codex", "grok", "claude")]
+    agents = [probe_agent(n) for n in VALID_AGENTS]
     any_agent = any(p.ok for p in agents)
     agent_summary = Probe(
         "agentes",
         "agent",
         found=any(p.found for p in agents),
         ok=any_agent,
-        detail="al menos un CLI headless (codex/grok/claude)"
+        detail="al menos un CLI headless (grok/antigravity/codex)"
         if any_agent
         else "ningún agente headless usable",
         extra={"members": [p.as_dict() for p in agents]},

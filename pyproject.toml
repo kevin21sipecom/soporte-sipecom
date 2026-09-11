@@ -1,7 +1,7 @@
 [project]
 name = "soporte-sipecom"
-version = "0.1.0"
-description = "SIPECOM-SOPORTE: CLI y dashboard Streamlit (puerto 2121)."
+version = "0.2.0"
+description = "SIPECOM-SOPORTE: CLI y dashboard local (127.0.0.1:2121)."
 readme = "README.md"
 authors = [
     { name = "kevin21sipecom", email = "kfernandez@sipecom.com" }
@@ -16,6 +16,10 @@ dependencies = [
 [project.scripts]
 soporte = "soporte_sipecom.cli:main"
 sipecom-soporte = "soporte_sipecom.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/kevin21sipecom/soporte-sipecom"
+Documentation = "https://github.com/kevin21sipecom/soporte-sipecom/blob/main/docs/README.md"
 
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]

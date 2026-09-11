@@ -9,9 +9,10 @@ import streamlit as st
 import yaml
 
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg
-from soporte_sipecom.detect import which
+from soporte_sipecom.detect import VALID_AGENTS, which
 from soporte_sipecom.engine import run_engine
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
+from soporte_sipecom.models import default_model_id, list_efforts, list_models
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
@@ -20,9 +21,6 @@ DEFAULT_CATALOGO = Path(
 )
 UPLOADS = HERE / ".uploads"
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
-GROK_MODELS = ["grok-4.6", "grok-4.5"]
-CODEX_MODELS = ["gpt-6-astra"]
-EFFORTS = ["low", "medium", "high", "xhigh"]
 API_PROVIDERS = ["OpenAI", "xAI (Grok)", "Anthropic (Claude)"]
 SIPI = ASSETS / "sipi-colibri.png"
 LOGO = ASSETS / "sipecom-logo.png"
@@ -129,22 +127,37 @@ with st.sidebar:
 
     st.subheader("Motor")
     if modo == "CLI local":
-        clis = [a for a in ("grok", "codex") if a in saved_agents] or ["grok", "codex"]
-        motor = st.selectbox("CLI", clis)
-        modelos = GROK_MODELS if motor == "grok" else CODEX_MODELS
-        st.caption("Sesión de esta PC. Sin API keys.")
+        detected = [a for a in VALID_AGENTS if which(a)]
+        clis = [a for a in saved_agents if a in VALID_AGENTS and a in detected] or detected
+        if not clis:
+            st.warning("No hay grok, antigravity ni codex en esta PC.")
+            motor = ""
+            modelo = ""
+            effort = "medium"
+        else:
+            motor = st.selectbox("CLI", clis)
+            st.caption("Sesión de esta PC. Sin API keys. Modelos leídos de la CLI.")
+            with st.spinner("Leyendo modelos…"):
+                infos = list_models(motor)
+            ids = [m.id for m in infos]
+            if ids:
+                idx = ids.index(default_model_id(infos)) if default_model_id(infos) in ids else 0
+                modelo = st.selectbox("Modelo", ids, index=idx)
+            else:
+                modelo = ""
+                st.caption("Esta CLI no devolvió modelos. Escribe el id abajo.")
+            extra = st.text_input("Modelo extra (opcional)", placeholder="id de modelo")
+            if extra.strip():
+                modelo = extra.strip()
+            efforts = list_efforts(motor, modelo, infos if ids else None)
+            effort = st.selectbox("Effort", efforts, index=min(1, len(efforts) - 1) if efforts else 0)
     else:
         motor = "grok"
         st.selectbox("Proveedor", API_PROVIDERS)
         st.text_input("API key", type="password", placeholder="sk-…")
-        modelos = GROK_MODELS + CODEX_MODELS
+        modelo = st.text_input("Modelo", placeholder="id de modelo")
+        effort = st.selectbox("Effort", ["low", "medium", "high", "xhigh"], index=1)
         st.caption("La key no se guarda en disco.")
-
-    modelo = st.selectbox("Modelo", modelos)
-    extra = st.text_input("Modelo extra (opcional)", placeholder="id de modelo")
-    if extra.strip():
-        modelo = extra.strip()
-    effort = st.selectbox("Effort", EFFORTS, index=EFFORTS.index("medium"))
 
     st.divider()
     year = datetime.now().year
