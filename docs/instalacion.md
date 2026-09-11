@@ -1,5 +1,7 @@
 # Instalación (toda la PC)
 
+De momento solo **Windows**. No está validado en Linux ni macOS.
+
 ## Instalar uv
 
 Windows (PowerShell):

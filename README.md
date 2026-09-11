@@ -4,6 +4,8 @@ CLI global y consola local para consultar proyectos (CodeGraph + Repomix) con **
 
 La UI es **localhost** (`127.0.0.1:2121`). Sin túnel.
 
+**Plataforma:** de momento solo **Windows**. No está validado en Linux ni macOS.
+
 ![Consola SIPECOM-SOPORTE](docs/consola-ui.png)
 
 ## Instalar uv
