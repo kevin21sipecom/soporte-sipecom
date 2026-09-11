@@ -14,7 +14,7 @@ from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
 from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
-from soporte_sipecom.maps import existing_artifacts, render_mapa
+from soporte_sipecom.maps import existing_artifacts, prepare_embed, render_mapa
 from soporte_sipecom.onboard import HINTS, detected_agents, probe_node, probe_npm
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
@@ -334,8 +334,8 @@ if vista == "Mapa":
     if htmls:
         import streamlit.components.v1 as components
 
-        raw = htmls[0].read_text(encoding="utf-8", errors="replace")
-        components.html(raw, height=720, scrolling=True)
+        raw = prepare_embed(htmls[0].read_text(encoding="utf-8", errors="replace"))
+        components.html(raw, height=640, scrolling=False)
     elif pngs:
         st.image(str(pngs[0]), use_container_width=True)
     else:

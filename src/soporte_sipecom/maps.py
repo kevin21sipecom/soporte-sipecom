@@ -140,6 +140,36 @@ def build_spec(proyecto: dict) -> dict:
     }
 
 
+def prepare_embed(html: str) -> str:
+    """Tema claro + modo embed (sin toolbar ni barras de scroll)."""
+    if not html:
+        return html
+    html = html.replace('data-theme="dark"', 'data-theme="light"', 1)
+    if "data-embed=" not in html[:1200]:
+        html = html.replace("<html ", '<html data-embed="true" ', 1)
+        html = html.replace("<html>", '<html data-embed="true">', 1)
+    if 'data-theme="light"' not in html[:1200]:
+        html = html.replace("<html ", '<html data-theme="light" ', 1)
+    inject = """
+<style id="sipe-embed">
+html, body { overflow: hidden !important; height: 100% !important; margin: 0 !important; }
+::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+* { scrollbar-width: none !important; }
+html[data-embed="true"] .toolbar,
+html[data-embed="true"] .header,
+html[data-embed="true"] .cards { display: none !important; }
+</style>
+<script>
+document.documentElement.setAttribute("data-theme", "light");
+document.documentElement.setAttribute("data-embed", "true");
+try { localStorage.setItem("archify-theme", "light"); } catch (e) {}
+</script>
+"""
+    if "</head>" in html:
+        html = html.replace("</head>", inject + "</head>", 1)
+    return html
+
+
 def pretty_archify_error(out: str) -> str:
     messages = re.findall(r'"message"\s*:\s*"((?:\\.|[^"\\])*)"', out)
     if messages:
