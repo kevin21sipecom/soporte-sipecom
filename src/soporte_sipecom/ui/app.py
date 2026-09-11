@@ -11,6 +11,7 @@ import yaml
 
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_cfg
 from soporte_sipecom.constants import VALID_AGENTS
+from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
 from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
 from soporte_sipecom.maps import existing_artifacts, render_mapa
@@ -56,10 +57,8 @@ def seed_catalog() -> dict:
 
 
 def chat_dir() -> Path:
-    sid = st.session_state.setdefault("chat_id", str(int(time.time() * 1000)))
-    path = Path.home() / ".soporte-sipecom" / "chats" / str(sid)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    sid = st.session_state.setdefault("chat_id", new_id())
+    return thread_dir(str(sid))
 
 
 def save_uploads(files) -> list[Path]:
@@ -100,6 +99,13 @@ st.markdown(
 [data-testid="stSidebar"] [data-testid="stSegmentedControl"] button {
   flex: 1 1 0 !important;
 }
+[data-testid="stSidebar"] .stButton > button {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -117,6 +123,17 @@ if live_agents and cfg.get("agents") != live_agents:
     save_cfg(cfg)
 saved_agents = cfg.get("agents") or live_agents
 
+if "chat_id" not in st.session_state:
+    existing = load_index()
+    if existing:
+        st.session_state.chat_id = existing[0]["id"]
+        msgs, imgs = load_thread(existing[0]["id"])
+        st.session_state.messages = msgs
+        st.session_state.conversation_images = imgs
+    else:
+        st.session_state.chat_id = new_id()
+        st.session_state.messages = []
+        st.session_state.conversation_images = []
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "conversation_images" not in st.session_state:
@@ -169,6 +186,41 @@ with st.sidebar:
             if not ok and hint:
                 st.caption(hint)
         st.caption("CodeGraph + Repomix = contexto del proyecto (sin volcar el pack).")
+
+    st.subheader("Conversaciones")
+    if st.button("Nueva conversación", width="stretch"):
+        pid = (proyecto or {}).get("id") or ""
+        save_thread(
+            st.session_state.chat_id,
+            st.session_state.messages,
+            st.session_state.conversation_images,
+            pid,
+        )
+        st.session_state.chat_id = new_id()
+        st.session_state.messages = []
+        st.session_state.conversation_images = []
+        st.session_state.jump_to = None
+        st.rerun()
+    for item in load_index():
+        cid = item.get("id") or ""
+        if not cid:
+            continue
+        title = item.get("title") or "Nueva conversación"
+        active = cid == st.session_state.chat_id
+        if st.button(title, key=f"conv_{cid}", width="stretch", type="primary" if active else "secondary"):
+            if cid != st.session_state.chat_id:
+                save_thread(
+                    st.session_state.chat_id,
+                    st.session_state.messages,
+                    st.session_state.conversation_images,
+                    (proyecto or {}).get("id") or "",
+                )
+                msgs, imgs = load_thread(cid)
+                st.session_state.chat_id = cid
+                st.session_state.messages = msgs
+                st.session_state.conversation_images = imgs
+                st.session_state.jump_to = None
+                st.rerun()
 
     conv_imgs = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
     if conv_imgs:
@@ -263,40 +315,15 @@ if not proyecto:
     st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
     st.stop()
 
-top_l, top_r = st.columns([3, 2], vertical_alignment="center")
-with top_l:
-    vista = st.segmented_control(
-        "Vista",
-        options=["Chat", "Mapa"],
-        default="Chat",
-        key="vista_principal",
-        label_visibility="collapsed",
-    )
-    if not vista:
-        vista = "Chat"
-with top_r:
-    idx_col, new_col = st.columns(2)
-    with idx_col:
-        preguntas = [
-            (i, (item.get("content") or "").strip())
-            for i, item in enumerate(st.session_state.messages)
-            if item.get("role") == "user" and (item.get("content") or "").strip()
-        ]
-        with st.popover(f"Índice ({len(preguntas)})"):
-            if not preguntas:
-                st.caption("Aún no hay preguntas en este hilo.")
-            for i, texto in preguntas:
-                label = texto.replace("\n", " ")[:56]
-                if st.button(label, key=f"jump_{i}", width="stretch"):
-                    st.session_state.jump_to = i
-                    st.rerun()
-    with new_col:
-        if st.button("Nueva conversación", width="stretch"):
-            st.session_state.messages = []
-            st.session_state.conversation_images = []
-            st.session_state.jump_to = None
-            st.session_state.chat_id = str(int(time.time() * 1000))
-            st.rerun()
+vista = st.segmented_control(
+    "Vista",
+    options=["Chat", "Mapa"],
+    default="Chat",
+    key="vista_principal",
+    label_visibility="collapsed",
+)
+if not vista:
+    vista = "Chat"
 
 if vista == "Mapa":
     st.subheader("Mapa")
@@ -403,4 +430,10 @@ if prompt:
 
     st.session_state.messages.append(
         {"role": "assistant", "content": answer, "motor": used, "command": cmd}
+    )
+    save_thread(
+        st.session_state.chat_id,
+        st.session_state.messages,
+        st.session_state.conversation_images,
+        (proyecto or {}).get("id") or "",
     )
