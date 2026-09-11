@@ -34,6 +34,22 @@ SIPI = ASSETS / "sipi-colibri.png"
 LOGO = ASSETS / "sipecom-logo.png"
 
 
+def pick_folder() -> str:
+    """Explorador nativo de carpetas (solo tiene sentido en localhost)."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        chosen = filedialog.askdirectory(title="Carpeta del proyecto")
+        root.destroy()
+        return chosen or ""
+    except Exception:
+        return ""
+
+
 def seed_catalog() -> dict:
     return load_catalog()
 
@@ -116,17 +132,30 @@ with st.sidebar:
         st.info("Agrega un proyecto para chatear.")
 
     with st.expander("Agregar proyecto"):
-        nueva_ruta = st.text_input("Carpeta del proyecto")
+        if st.session_state.pop("clear_ruta", False):
+            st.session_state.nueva_ruta = ""
+        if "picked_folder" in st.session_state:
+            st.session_state.nueva_ruta = st.session_state.pop("picked_folder")
+        ruta_col, btn_col = st.columns([4, 1], vertical_alignment="bottom")
+        with ruta_col:
+            nueva_ruta = st.text_input("Carpeta del proyecto", key="nueva_ruta")
+        with btn_col:
+            if st.button("Examinar", width="stretch"):
+                chosen = pick_folder()
+                if chosen:
+                    st.session_state.picked_folder = chosen
+                    st.rerun()
         nuevo_nombre = st.text_input("Nombre (opcional)", placeholder="Mi app")
         if st.button("Indexar y empaquetar", type="primary"):
-            if not nueva_ruta.strip():
-                st.error("Indica una ruta.")
+            if not (nueva_ruta or "").strip():
+                st.error("Elige una carpeta.")
             else:
                 try:
                     with st.status("CodeGraph + Repomix", expanded=True) as status:
                         entry = add_project(nueva_ruta, nuevo_nombre)
                         status.update(label="Proyecto listo", state="complete")
                     st.success(f"Agregado: {entry['nombre']}")
+                    st.session_state.clear_ruta = True
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc))
