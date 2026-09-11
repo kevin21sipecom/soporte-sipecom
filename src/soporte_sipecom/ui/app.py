@@ -14,19 +14,23 @@ from soporte_sipecom.constants import VALID_AGENTS
 from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
 from soporte_sipecom.detect import probe_archify, probe_codegraph, probe_repomix, which
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
-from soporte_sipecom.maps import existing_artifacts, prepare_embed, render_mapa
 from soporte_sipecom.onboard import HINTS, detected_agents, probe_node, probe_npm
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
 import soporte_sipecom.engine as _engine_mod
+import soporte_sipecom.maps as _maps_mod
 
 importlib.reload(_detect_mod)
 _models_mod = importlib.reload(_models_mod)
 _engine_mod = importlib.reload(_engine_mod)
+_maps_mod = importlib.reload(_maps_mod)
 run_engine = _engine_mod.run_engine
 baked_effort = _models_mod.baked_effort
 list_efforts = _models_mod.list_efforts
 list_models = _models_mod.list_models
+existing_artifacts = _maps_mod.existing_artifacts
+prepare_embed = _maps_mod.prepare_embed
+render_mapa = _maps_mod.render_mapa
 
 HERE = Path(__file__).resolve().parent
 ASSETS = HERE / "assets"
