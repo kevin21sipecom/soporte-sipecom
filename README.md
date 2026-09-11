@@ -16,13 +16,13 @@ Puerto por defecto: **2121**.
 
 ```text
 uv sync
-uv run soporte
-uv run soporte doctor
-uv run soporte select --use grok,codex
-uv run soporte ui
+uv run sipecom-soporte
+uv run sipecom-soporte doctor
+uv run sipecom-soporte select --use grok,codex
+uv run sipecom-soporte dashboard
 ```
 
-Consola Streamlit (diseño SIPECOM, puerto **2121**): header, Sipi, sidebar de motor, tabs Terminal/Mapas/Receta. CLI local, sin API keys.
+`sipecom-soporte dashboard` abre **esta** consola Streamlit (puerto **2121**): header, Sipi, sidebar de motor, chat. CLI local, sin API keys. `ui` es alias.
 
 Config: `~/.soporte-sipecom.json`
 

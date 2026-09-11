@@ -101,10 +101,30 @@ def cmd_select(chosen: list[str] | None) -> int:
     return 0
 
 
+def launch_dashboard(port: int) -> int:
+    app = Path(__file__).resolve().parent / "ui" / "app.py"
+    cmd = [
+        sys.executable,
+        "-m",
+        "streamlit",
+        "run",
+        str(app),
+        "--server.address",
+        "127.0.0.1",
+        "--server.port",
+        str(port),
+        "--browser.gatherUsageStats",
+        "false",
+    ]
+    print(banner(port))
+    print(f"Dashboard → http://127.0.0.1:{port}")
+    return subprocess.call(cmd)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="soporte",
-        description="SIPECOM-SOPORTE — CLI de soporte (doctor de CLIs, puerto 2121).",
+        prog="sipecom-soporte",
+        description="SIPECOM-SOPORTE — CLI de soporte y dashboard Streamlit (puerto 2121).",
     )
     parser.add_argument("--port", type=int, default=None, help="puerto (default 2121)")
     sub = parser.add_subparsers(dest="cmd")
@@ -119,8 +139,10 @@ def main(argv: list[str] | None = None) -> int:
         help="lista: grok,codex,claude (si se omite, pregunta o usa los OK)",
     )
 
-    cfgp = sub.add_parser("config", help="Mostrar config (puerto + agentes)")
-    sub.add_parser("ui", help="Abrir consola Streamlit (puerto 2121)")
+    sub.add_parser("config", help="Mostrar config (puerto + agentes)")
+    sub.add_parser("dashboard", help="Abrir la consola Streamlit (esta UI)")
+    sub.add_parser("ui", help="Alias de dashboard")
+    sub.add_parser("dasboard", help=argparse.SUPPRESS)
 
     args = parser.parse_args(argv)
     port = args.port if args.port else load().get("port") or DEFAULT_PORT
@@ -129,8 +151,8 @@ def main(argv: list[str] | None = None) -> int:
         print(banner(port))
         probes = doctor()
         code = _print_doctor(probes, as_json=False)
-        print("\nSiguiente:  soporte select --use grok,codex")
-        print(f"Puerto de servicio: {port}")
+        print("\nDashboard:  sipecom-soporte dashboard")
+        print(f"Puerto: {port}")
         return code
 
     if args.cmd == "doctor":
@@ -152,26 +174,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"archivo: {config_path()}")
         return 0
 
-    if args.cmd == "ui":
-        app = Path(__file__).resolve().parent / "ui" / "app.py"
-        cmd = [
-            sys.executable,
-            "-m",
-            "streamlit",
-            "run",
-            str(app),
-            "--server.address",
-            "127.0.0.1",
-            "--server.port",
-            str(port),
-            "--server.headless",
-            "true",
-            "--browser.gatherUsageStats",
-            "false",
-        ]
-        print(banner(port))
-        print(f"Streamlit → http://127.0.0.1:{port}")
-        return subprocess.call(cmd)
+    if args.cmd in {"dashboard", "ui", "dasboard"}:
+        return launch_dashboard(port)
 
     parser.print_help()
     return 2

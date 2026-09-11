@@ -1,7 +1,7 @@
 [project]
 name = "soporte-sipecom"
 version = "0.1.0"
-description = "SIPECOM-SOPORTE: CLI de soporte. Doctor de herramientas y puerto 2121."
+description = "SIPECOM-SOPORTE: CLI y dashboard Streamlit (puerto 2121)."
 readme = "README.md"
 authors = [
     { name = "kevin21sipecom", email = "kfernandez@sipecom.com" }
