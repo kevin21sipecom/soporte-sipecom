@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Índice de conversaciones a la derecha, ticks muy chicos.
+
 ## 0.5.0
 
 - Onboarding pregunta s/n e instala CodeGraph, Repomix y Archify sin salir.

@@ -104,25 +104,47 @@ st.markdown(
 [data-testid="stSidebar"] [data-testid="stSegmentedControl"] button {
   flex: 1 1 0 !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child {
-  max-width: 3.4rem;
-  min-width: 3.4rem;
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child {
+  max-width: 1.15rem !important;
+  min-width: 1.15rem !important;
+  width: 1.15rem !important;
+  padding: 0.15rem 0 0 0 !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child .stButton > button {
-  width: 2.45rem !important;
-  height: 2.45rem !important;
-  min-height: 2.45rem !important;
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child [data-testid="stVerticalBlock"] {
+  gap: 0.28rem !important;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton {
+  min-height: 0 !important;
+  width: 100% !important;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button {
+  width: 0.42rem !important;
+  min-width: 0.42rem !important;
+  height: 1.15rem !important;
+  min-height: 1.15rem !important;
   padding: 0 !important;
+  margin: 0 auto !important;
   border: 0 !important;
-  border-radius: 0.75rem !important;
+  border-radius: 0.28rem !important;
   justify-content: center !important;
-  background: #eceff5 !important;
-  color: #6b7280 !important;
+  background: #d8dce6 !important;
+  opacity: 0.45 !important;
+  box-shadow: none !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
 }
-[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child .stButton > button[kind="primary"] {
-  background: #e8ebff !important;
-  box-shadow: inset -3px 0 0 #5b6ee8;
-  color: #3d4fd8 !important;
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button p,
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button span {
+  display: none !important;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button:hover {
+  opacity: 0.85 !important;
+  background: #c5cad6 !important;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:last-child .stButton > button[kind="primary"] {
+  background: #5b6ee8 !important;
+  opacity: 0.95 !important;
 }
 </style>
 """,
@@ -289,10 +311,10 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-rail, body = st.columns([1, 18], gap="small")
+body, rail = st.columns([48, 1], gap="small")
 with rail:
     pid = (proyecto or {}).get("id") or ""
-    if st.button(":material/edit_square:", help="Nueva conversación", key="rail_new"):
+    if st.button(" ", help="Nueva conversación", key="rail_new"):
         persist_chat(pid)
         st.session_state.chat_id = new_id()
         st.session_state.messages = []
@@ -306,7 +328,7 @@ with rail:
         title = item.get("title") or "Nueva conversación"
         active = cid == st.session_state.chat_id
         if st.button(
-            ":material/chat_bubble:",
+            " ",
             help=title,
             key=f"rail_{cid}",
             type="primary" if active else "secondary",
