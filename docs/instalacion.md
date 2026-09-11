@@ -30,10 +30,15 @@ sipecom-soporte dashboard
 Actualizar:
 
 ```text
-uv tool upgrade soporte-sipecom
+uv tool upgrade sipecom-soporte
 ```
 
-Python 3.11+ y [uv](https://docs.astral.sh/uv/). No hace falta quedarse dentro de una carpeta clonada.
+Si tenías el paquete viejo `soporte-sipecom`:
+
+```text
+uv tool uninstall soporte-sipecom
+uv tool install git+https://github.com/kevin21sipecom/soporte-sipecom.git
+```
 
 ## Onboarding
 

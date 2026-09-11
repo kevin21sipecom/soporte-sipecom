@@ -1,6 +1,6 @@
 [project]
-name = "soporte-sipecom"
-version = "0.3.0"
+name = "sipecom-soporte"
+version = "0.4.0"
 description = "SIPECOM-SOPORTE: CLI global y dashboard local (127.0.0.1:2121)."
 readme = "README.md"
 authors = [
@@ -15,11 +15,13 @@ dependencies = [
 
 [project.scripts]
 sipecom-soporte = "soporte_sipecom.cli:main"
-soporte-sipecom = "soporte_sipecom.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/kevin21sipecom/soporte-sipecom"
 Documentation = "https://github.com/kevin21sipecom/soporte-sipecom/blob/main/docs/README.md"
+
+[tool.uv.build-backend]
+module-name = "soporte_sipecom"
 
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]

@@ -32,7 +32,7 @@ sipecom-soporte dashboard
 Actualizar:
 
 ```text
-uv tool upgrade soporte-sipecom
+uv tool upgrade sipecom-soporte
 ```
 
 Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- Paquete y comando: `sipecom-soporte` (`uv tool upgrade sipecom-soporte`).
+- Conversaciones en una barrita lateral (estilo Hermes).
+
 ## 0.3.0
 
 - Instalación global con `uv tool install` (no hace falta `cd` al repo).

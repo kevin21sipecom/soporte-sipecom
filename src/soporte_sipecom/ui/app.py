@@ -76,6 +76,15 @@ def save_uploads(files) -> list[Path]:
     return paths
 
 
+def persist_chat(project_id: str = "") -> None:
+    save_thread(
+        st.session_state.chat_id,
+        st.session_state.messages,
+        st.session_state.conversation_images,
+        project_id,
+    )
+
+
 st.set_page_config(
     page_title="Consola de Soporte · Sipecom",
     page_icon=str(SIPI) if SIPI.is_file() else ":material/support_agent:",
@@ -95,12 +104,25 @@ st.markdown(
 [data-testid="stSidebar"] [data-testid="stSegmentedControl"] button {
   flex: 1 1 0 !important;
 }
-[data-testid="stSidebar"] .stButton > button {
-  justify-content: flex-start;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child {
+  max-width: 3.4rem;
+  min-width: 3.4rem;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child .stButton > button {
+  width: 2.45rem !important;
+  height: 2.45rem !important;
+  min-height: 2.45rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0.75rem !important;
+  justify-content: center !important;
+  background: #eceff5 !important;
+  color: #6b7280 !important;
+}
+[data-testid="stMain"] [data-testid="stHorizontalBlock"]:first-of-type > div:first-child .stButton > button[kind="primary"] {
+  background: #e8ebff !important;
+  box-shadow: inset -3px 0 0 #5b6ee8;
+  color: #3d4fd8 !important;
 }
 </style>
 """,
@@ -136,41 +158,6 @@ if "conversation_images" not in st.session_state:
     st.session_state.conversation_images = []
 
 with st.sidebar:
-    st.subheader("Conversaciones")
-    if st.button("Nueva conversación", width="stretch"):
-        pid = ""
-        save_thread(
-            st.session_state.chat_id,
-            st.session_state.messages,
-            st.session_state.conversation_images,
-            pid,
-        )
-        st.session_state.chat_id = new_id()
-        st.session_state.messages = []
-        st.session_state.conversation_images = []
-        st.session_state.jump_to = None
-        st.rerun()
-    for item in load_index():
-        cid = item.get("id") or ""
-        if not cid:
-            continue
-        title = item.get("title") or "Nueva conversación"
-        active = cid == st.session_state.chat_id
-        if st.button(title, key=f"conv_{cid}", width="stretch", type="primary" if active else "secondary"):
-            if cid != st.session_state.chat_id:
-                save_thread(
-                    st.session_state.chat_id,
-                    st.session_state.messages,
-                    st.session_state.conversation_images,
-                    "",
-                )
-                msgs, imgs = load_thread(cid)
-                st.session_state.chat_id = cid
-                st.session_state.messages = msgs
-                st.session_state.conversation_images = imgs
-                st.session_state.jump_to = None
-                st.rerun()
-
     st.subheader("Proyecto")
     if proyectos:
         names = [p.get("nombre") or p.get("id") for p in proyectos]
@@ -302,73 +289,105 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-if not proyecto:
-    st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
-    st.stop()
-
-vista = st.segmented_control(
-    "Vista",
-    options=["Chat", "Mapa"],
-    default="Chat",
-    key="vista_principal",
-    label_visibility="collapsed",
-)
-if not vista:
-    vista = "Chat"
-
-if vista == "Mapa":
-    st.subheader("Mapa")
-    st.caption("Archify a partir de CodeGraph + pack. Sin inventar topología.")
-    arts = existing_artifacts(proyecto)
-    pngs = [p for p in arts if p.suffix.lower() in {".png", ".webp"}]
-    htmls = [p for p in arts if p.suffix.lower() == ".html"]
-    if htmls:
-        import streamlit.components.v1 as components
-
-        raw = prepare_embed(htmls[0].read_text(encoding="utf-8", errors="replace"))
-        components.html(raw, height=640, scrolling=False)
-    elif pngs:
-        st.image(str(pngs[0]), use_container_width=True)
-    else:
-        st.info("Todavía no hay mapa de este proyecto.")
-    if st.button("Armar mapa", type="primary"):
-        try:
-            with st.status("CodeGraph + Archify", expanded=True) as status:
-                result = render_mapa(proyecto)
-                status.update(label="Mapa listo", state="complete")
-            catalog = load_catalog()
-            for item in catalog.get("proyectos") or []:
-                if item.get("id") == proyecto.get("id"):
-                    item["mapa_html"] = result.get("html")
-                    if result.get("png"):
-                        item["mapa_png"] = result["png"]
-            save_catalog(catalog)
-            st.rerun()
-        except Exception as exc:
-            st.error(str(exc)[:400])
-    st.stop()
-
-jump = st.session_state.get("jump_to")
-for idx, item in enumerate(st.session_state.messages):
-    highlight = jump is not None and idx == jump
-    box = st.container(border=highlight)
-    with box:
-        if highlight:
-            st.caption(f"Pregunta #{idx + 1}")
-        if item["role"] == "user":
-            if item.get("content"):
-                st.markdown(item["content"])
-            for path in item.get("adjuntos") or []:
-                p = Path(path)
-                if p.suffix.lower() in IMAGE_EXT and p.is_file():
-                    st.image(str(p), caption=p.name)
+rail, body = st.columns([1, 18], gap="small")
+with rail:
+    pid = (proyecto or {}).get("id") or ""
+    if st.button(":material/edit_square:", help="Nueva conversación", key="rail_new"):
+        persist_chat(pid)
+        st.session_state.chat_id = new_id()
+        st.session_state.messages = []
+        st.session_state.conversation_images = []
+        st.session_state.jump_to = None
+        st.rerun()
+    for item in load_index()[:24]:
+        cid = item.get("id") or ""
+        if not cid:
             continue
-        kwargs = {"avatar": str(SIPI)} if SIPI.is_file() else {}
-        with st.chat_message("assistant", **kwargs):
-            if item.get("content"):
-                st.markdown(item["content"])
-            if item.get("motor"):
-                st.caption(f"motor: `{item['motor']}`")
+        title = item.get("title") or "Nueva conversación"
+        active = cid == st.session_state.chat_id
+        if st.button(
+            ":material/chat_bubble:",
+            help=title,
+            key=f"rail_{cid}",
+            type="primary" if active else "secondary",
+        ):
+            if cid != st.session_state.chat_id:
+                persist_chat(pid)
+                msgs, imgs = load_thread(cid)
+                st.session_state.chat_id = cid
+                st.session_state.messages = msgs
+                st.session_state.conversation_images = imgs
+                st.session_state.jump_to = None
+                st.rerun()
+
+with body:
+    if not proyecto:
+        st.info("Agrega un proyecto en la barra lateral. Python corre CodeGraph y Repomix al registrarlo.")
+        st.stop()
+
+    vista = st.segmented_control(
+        "Vista",
+        options=["Chat", "Mapa"],
+        default="Chat",
+        key="vista_principal",
+        label_visibility="collapsed",
+    )
+    if not vista:
+        vista = "Chat"
+
+    if vista == "Mapa":
+        st.subheader("Mapa")
+        st.caption("Archify a partir de CodeGraph + pack. Sin inventar topología.")
+        arts = existing_artifacts(proyecto)
+        pngs = [p for p in arts if p.suffix.lower() in {".png", ".webp"}]
+        htmls = [p for p in arts if p.suffix.lower() == ".html"]
+        if htmls:
+            import streamlit.components.v1 as components
+
+            raw = prepare_embed(htmls[0].read_text(encoding="utf-8", errors="replace"))
+            components.html(raw, height=640, scrolling=False)
+        elif pngs:
+            st.image(str(pngs[0]), use_container_width=True)
+        else:
+            st.info("Todavía no hay mapa de este proyecto.")
+        if st.button("Armar mapa", type="primary"):
+            try:
+                with st.status("CodeGraph + Archify", expanded=True) as status:
+                    result = render_mapa(proyecto)
+                    status.update(label="Mapa listo", state="complete")
+                catalog = load_catalog()
+                for item in catalog.get("proyectos") or []:
+                    if item.get("id") == proyecto.get("id"):
+                        item["mapa_html"] = result.get("html")
+                        if result.get("png"):
+                            item["mapa_png"] = result["png"]
+                save_catalog(catalog)
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc)[:400])
+        st.stop()
+
+    jump = st.session_state.get("jump_to")
+    for idx, item in enumerate(st.session_state.messages):
+        highlight = jump is not None and idx == jump
+        box = st.container(border=highlight)
+        with box:
+            if highlight:
+                st.caption(f"Pregunta #{idx + 1}")
+            if item["role"] == "user":
+                if item.get("content"):
+                    st.markdown(item["content"])
+                for path in item.get("adjuntos") or []:
+                    p = Path(path)
+                    if p.suffix.lower() in IMAGE_EXT and p.is_file():
+                        st.image(str(p), caption=p.name)
+                continue
+            kwargs = {"avatar": str(SIPI)} if SIPI.is_file() else {}
+            with st.chat_message("assistant", **kwargs):
+                if item.get("content"):
+                    st.markdown(item["content"])
+                if item.get("motor"):
+                    st.caption(f"motor: `{item['motor']}`")
 
 prompt = st.chat_input(
     "Escribe un mensaje",
