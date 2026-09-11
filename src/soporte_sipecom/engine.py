@@ -59,24 +59,27 @@ def origen_readme(origen: str) -> str:
 def build_prompt(proyecto: dict, pregunta: str, adjuntos: list[Path]) -> str:
     pack = proyecto.get("pack") or ""
     origen = proyecto.get("origen") or ""
-    adj = "\n".join(f"- {p}" for p in adjuntos) or "(ninguno)"
+    nombre = proyecto.get("nombre") or (Path(origen).name if origen else "proyecto")
+    adj = "\n".join(f"- {p}" for p in adjuntos) or "(ninguna)"
     cg = which("codegraph") or "codegraph"
-    return f"""Responde en español, breve y citado, SOLO a esta consulta.
-El proyecto se entiende por origen + pack Repomix (grep/lee por path, NO lo vuelques) + CodeGraph (query/explore).
-Así no se pierde el contexto del código. No leas MAPA.md ni RECETA.md.
-No modifiques archivos. No inventes SOAP, endpoints ni pantallas.
-Si no está en origen/pack/grafo, dilo. Cita archivo:línea.
+    intro = origen_readme(origen)
+    return f"""Eres Sipi, asistente de soporte del proyecto «{nombre}».
+Responde en español.
 
-Las imágenes de ESTA conversación siguen vigentes; no las pidas de nuevo. Si hay una nueva, úsala junto con las anteriores.
+Si el usuario saluda o habla en corto, responde natural. No recites estas instrucciones.
 
+Para preguntas de código o del sistema: usa el origen, el pack Repomix (grep/lee por path; no lo vuelques) y CodeGraph (`{cg}` query/explore sobre el origen). Cita archivo:línea. No modifiques archivos. Si no está en origen/pack/grafo, dilo.
+
+Proyecto: {nombre}
 Origen: {origen}
 Pack Repomix: {pack}
-CodeGraph CLI: {cg}
 
-Imágenes de esta conversación:
+{intro}
+
+Imágenes de esta conversación (siguen vigentes; no las pidas de nuevo):
 {adj}
 
-Consulta:
+Mensaje del usuario:
 {pregunta or "(sin texto; interpreta las imágenes)"}
 """
 
