@@ -40,10 +40,16 @@ sipecom-soporte
 sipecom-soporte dashboard
 ```
 
-Actualizar:
+Actualizar (el paquete se llama `soporte-sipecom`; el comando es `sipecom-soporte`):
 
 ```text
-uv tool upgrade sipecom-soporte
+uv tool upgrade soporte-sipecom
+```
+
+Si aún no está instalado como herramienta:
+
+```text
+uv tool install --force git+https://github.com/kevin21sipecom/soporte-sipecom.git
 ```
 
 Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.
