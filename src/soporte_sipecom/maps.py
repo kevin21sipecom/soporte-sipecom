@@ -37,7 +37,10 @@ def maps_dir(slug: str) -> Path:
 
 def _slug_id(name: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-    return (slug or "nodo")[:40]
+    slug = (slug or "nodo")[:24]
+    if not slug[0].isalpha():
+        slug = "n" + slug
+    return slug
 
 
 def _kind(name: str) -> str:
@@ -59,6 +62,8 @@ def _top_folders(origen: Path) -> list[str]:
                 if not raw or raw.startswith("codegraph"):
                     continue
                 name = Path(raw.split()[0]).name
+                if name.lower() in {"project", "files", "tree"}:
+                    continue
                 if name and name.lower() not in SKIP and name not in names:
                     names.append(name)
                 if len(names) >= 10:
@@ -89,8 +94,8 @@ def build_spec(proyecto: dict) -> dict:
     components = []
     used: set[str] = set()
     cols = 3
-    cell_w, cell_h = 150, 64
-    gap_x, gap_y = 52, 48
+    cell_w, cell_h = 210, 68
+    gap_x, gap_y = 56, 52
     ox, oy = 48, 48
     for i, folder in enumerate(folders):
         kind = _kind(folder)
@@ -108,15 +113,12 @@ def build_spec(proyecto: dict) -> dict:
             {
                 "id": cid,
                 "type": kind,
-                "label": folder[:28],
+                "label": folder[:18],
                 "sublabel": kind,
                 "pos": [x, y],
                 "size": [cell_w, cell_h],
             }
         )
-    connections = []
-    for a, b in zip(components, components[1:]):
-        connections.append({"id": f"{a['id']}-to-{b['id']}"[:48], "from": a["id"], "to": b["id"]})
     return {
         "schema_version": 1,
         "diagram_type": "architecture",
@@ -126,14 +128,14 @@ def build_spec(proyecto: dict) -> dict:
             "quality_profile": "standard",
         },
         "components": components,
-        "connections": connections[:8],
+        "connections": [],
         "cards": [
             {
                 "dot": "cyan",
                 "title": "Evidencia",
                 "items": [
                     "Carpetas del origen vía CodeGraph",
-                    "Pack Repomix para el detalle en el chat",
+                    "Sin flechas inventadas: el detalle va en el chat (pack)",
                 ],
             }
         ],
