@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.5
+
+- Archify va en el paquete: el onboarding ya no depende de la skill de Hermes.
+
 ## 0.5.4
 
 - Índice de conversaciones centrado en vertical.

@@ -18,7 +18,7 @@ HINTS = {
     "npm": "winget install OpenJS.NodeJS.LTS",
     "codegraph": "npm i -g @colbymchenry/codegraph",
     "repomix": "npm install -g repomix",
-    "archify": 'setx ARCHIFY_HOME "%LOCALAPPDATA%\\hermes\\skills\\creative\\archify"',
+    "archify": "viene en el paquete sipecom-soporte (se copia al decir s)",
     "grok": "Instala Grok CLI y autentica (grok login). Binario típico: ~/.grok/bin/grok",
     "antigravity": "Instala Antigravity CLI. Binario: agy",
     "codex": "Instala OpenAI Codex CLI (codex exec debe existir).",

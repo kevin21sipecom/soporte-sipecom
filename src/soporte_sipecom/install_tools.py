@@ -44,16 +44,26 @@ def product_archify_dir() -> Path:
     return _localappdata() / "sipecom-soporte" / "archify"
 
 
+def bundled_archify() -> Path | None:
+    path = Path(__file__).resolve().parent / "vendor" / "archify"
+    if (path / "bin" / "archify.mjs").is_file():
+        return path
+    return None
+
+
 def archify_source() -> Path | None:
+    dest = product_archify_dir()
+    if (dest / "bin" / "archify.mjs").is_file():
+        return dest
+    bundled = bundled_archify()
+    if bundled:
+        return bundled
     root = archify_root()
     if root and (root / "bin" / "archify.mjs").is_file():
         return root
     hermes = _localappdata() / "hermes" / "skills" / "creative" / "archify"
     if (hermes / "bin" / "archify.mjs").is_file():
         return hermes
-    dest = product_archify_dir()
-    if (dest / "bin" / "archify.mjs").is_file():
-        return dest
     return None
 
 
@@ -106,7 +116,7 @@ def install_archify() -> tuple[bool, str]:
     dest = product_archify_dir()
     src = archify_source()
     if src is None:
-        return False, "no hay Archify en esta PC (hace falta la skill de Hermes)"
+        return False, "no hay Archify en el paquete ni en esta PC"
     dest.parent.mkdir(parents=True, exist_ok=True)
     if src.resolve() != dest.resolve():
         shutil.copytree(

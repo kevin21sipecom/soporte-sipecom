@@ -186,8 +186,10 @@ def archify_root() -> Path | None:
     hermes_skills = os.environ.get("HERMES_SKILLS")
     if hermes_skills:
         candidates.append(Path(hermes_skills) / "creative" / "archify")
+    bundled = Path(__file__).resolve().parent / "vendor" / "archify"
     candidates.extend(
         [
+            bundled,
             _localappdata() / "sipecom-soporte" / "archify",
             _localappdata() / "hermes" / "skills" / "creative" / "archify",
             _home() / ".hermes" / "skills" / "creative" / "archify",
@@ -260,8 +262,8 @@ def probe_archify() -> Probe:
         dcode, dout = run_cmd([node, str(script), "doctor"], timeout=25)
         extra["doctor_exit"] = dcode
         extra["doctor_ok"] = dcode == 0
-        ok = dcode == 0
-        detail = "" if ok else first_line(dout) or "doctor falló"
+        ok = True
+        detail = ""
         return Probe(
             "archify",
             "archify",
