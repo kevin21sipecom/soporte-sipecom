@@ -1,6 +1,17 @@
+LICENCIA SIPECOM
+================
+
+Software: SIPECOM-SOPORTE (paquete PyPI y comando `sipecom-soporte`)
+Titular del copyright: SIPECOM
+Año: 2026
+
+SIPECOM concede el uso de este software bajo los términos de la licencia MIT
+que siguen. El nombre SIPECOM, el logo, Sipi y las marcas asociadas no se
+sublicencian: siguen siendo de SIPECOM.
+
 MIT License
 
-Copyright (c) 2026 SIPECOM / kevin21sipecom
+Copyright (c) 2026 SIPECOM
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

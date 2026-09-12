@@ -78,4 +78,6 @@ Las CLIs las elige el **dashboard**. No hace falta `select --use`.
 
 ## Documentación
 
-[docs/README.md](docs/README.md)
+[About](docs/about.md) · [docs/README.md](docs/README.md)
+
+Licencia: [LICENSE](LICENSE) (MIT, titular SIPECOM).
