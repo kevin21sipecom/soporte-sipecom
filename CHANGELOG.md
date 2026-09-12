@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.6
+
+- Tokens del hilo (estimado) y caja «Error de la app» (log/stack) distinta del chat.
+
 ## 0.5.5
 
 - Archify va en el paquete: el onboarding ya no depende de la skill de Hermes.

@@ -55,20 +55,26 @@ def title_from_messages(messages: list[dict]) -> str:
     return "Nueva conversación"
 
 
-def load_thread(cid: str) -> tuple[list[dict], list[str]]:
+def load_thread(cid: str) -> tuple[list[dict], list[str], str]:
     path = thread_dir(cid) / "thread.json"
     if not path.is_file():
-        return [], []
+        return [], [], ""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return [], []
-    return list(data.get("messages") or []), list(data.get("images") or [])
+        return [], [], ""
+    return list(data.get("messages") or []), list(data.get("images") or []), str(data.get("intake") or "")
 
 
-def save_thread(cid: str, messages: list[dict], images: list[str], project: str = "") -> None:
+def save_thread(
+    cid: str,
+    messages: list[dict],
+    images: list[str],
+    project: str = "",
+    intake: str = "",
+) -> None:
     path = thread_dir(cid) / "thread.json"
-    payload = {"messages": messages, "images": images, "project": project}
+    payload = {"messages": messages, "images": images, "project": project, "intake": intake}
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     title = title_from_messages(messages)
     items = [x for x in load_index() if x.get("id") != cid]

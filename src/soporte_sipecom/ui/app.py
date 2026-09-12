@@ -13,6 +13,7 @@ from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_
 from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
 from soporte_sipecom.onboard import detected_agents
+from soporte_sipecom.tokens import format_int, thread_usage
 import soporte_sipecom.detect as _detect_mod
 import soporte_sipecom.models as _models_mod
 import soporte_sipecom.engine as _engine_mod
@@ -82,6 +83,7 @@ def persist_chat(project_id: str = "") -> None:
         st.session_state.messages,
         st.session_state.conversation_images,
         project_id,
+        st.session_state.get("intake") or "",
     )
 
 
@@ -186,17 +188,21 @@ if "chat_id" not in st.session_state:
     existing = load_index()
     if existing:
         st.session_state.chat_id = existing[0]["id"]
-        msgs, imgs = load_thread(existing[0]["id"])
+        msgs, imgs, intake = load_thread(existing[0]["id"])
         st.session_state.messages = msgs
         st.session_state.conversation_images = imgs
+        st.session_state.intake = intake
     else:
         st.session_state.chat_id = new_id()
         st.session_state.messages = []
         st.session_state.conversation_images = []
+        st.session_state.intake = ""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "conversation_images" not in st.session_state:
     st.session_state.conversation_images = []
+if "intake" not in st.session_state:
+    st.session_state.intake = ""
 
 with st.sidebar:
     st.subheader("Proyecto")
@@ -242,6 +248,16 @@ with st.sidebar:
         with st.expander(f"Imágenes de esta conversación ({len(conv_imgs)})", expanded=False):
             for p in conv_imgs:
                 st.image(str(p), caption=p.name, width=120)
+
+    st.subheader("Error de la app")
+    st.caption("Pega el texto rojo, el stack o el log. No es el chat: el chat es tu pregunta. Esto ancla la búsqueda en el código.")
+    st.text_area(
+        "Error / log / stack",
+        key="intake",
+        height=120,
+        placeholder="Exception, stack trace, log…",
+        label_visibility="collapsed",
+    )
 
     st.subheader("Modo de ejecución")
     modo = st.segmented_control(
@@ -347,6 +363,7 @@ with st.container(key="sipe_index"):
         st.session_state.messages = []
         st.session_state.conversation_images = []
         st.session_state.jump_to = None
+        st.session_state.intake = ""
         st.rerun()
     seen_ids: set[str] = set()
     for item in load_index()[:24]:
@@ -368,10 +385,11 @@ with st.container(key="sipe_index"):
         ):
             if cid != st.session_state.chat_id:
                 persist_chat(pid)
-                msgs, imgs = load_thread(cid)
+                msgs, imgs, intake = load_thread(cid)
                 st.session_state.chat_id = cid
                 st.session_state.messages = msgs
                 st.session_state.conversation_images = imgs
+                st.session_state.intake = intake
                 st.session_state.jump_to = None
                 st.rerun()
 
@@ -389,6 +407,13 @@ if True:
     )
     if not vista:
         vista = "Chat"
+
+    tin, tout, total = thread_usage(st.session_state.messages)
+    st.caption(
+        f"Este hilo · {format_int(total)} tokens "
+        f"(entrada {format_int(tin)} · salida {format_int(tout)}). "
+        "Estimado · 4 caracteres ≈ 1 token. CLI local: no es factura de API."
+    )
 
     if vista == "Mapa":
         st.subheader("Mapa")
@@ -432,6 +457,9 @@ if True:
             if item["role"] == "user":
                 if item.get("content"):
                     st.markdown(item["content"])
+                if (item.get("incidente") or "").strip():
+                    with st.expander("Error pegado", expanded=False):
+                        st.code(item["incidente"][:4000])
                 for path in item.get("adjuntos") or []:
                     p = Path(path)
                     if p.suffix.lower() in IMAGE_EXT and p.is_file():
@@ -443,6 +471,10 @@ if True:
                     st.markdown(item["content"])
                 if item.get("motor"):
                     st.caption(f"motor: `{item['motor']}`")
+                tin_m = int(item.get("tokens_in") or 0)
+                tout_m = int(item.get("tokens_out") or 0)
+                if tin_m or tout_m:
+                    st.caption(f"tokens: {format_int(tin_m)} in · {format_int(tout_m)} out")
 
 prompt = st.chat_input(
     "Escribe un mensaje",
@@ -461,8 +493,14 @@ if prompt:
             st.session_state.conversation_images.append(sp)
     memoria = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
 
+    incidente = (st.session_state.get("intake") or "").strip()
     st.session_state.messages.append(
-        {"role": "user", "content": text, "adjuntos": [str(p) for p in adjuntos]}
+        {
+            "role": "user",
+            "content": text,
+            "adjuntos": [str(p) for p in adjuntos],
+            "incidente": incidente,
+        }
     )
     if text:
         st.markdown(text)
@@ -473,13 +511,14 @@ if prompt:
     with st.chat_message("assistant", avatar=str(SIPI) if SIPI.is_file() else None):
         with st.status(":shimmer[Escribiendo]", type="compact") as status:
             if modo != "CLI local":
-                answer, used, cmd = (
+                answer, used, cmd, usage = (
                     "Modo API key: aún no ejecuta remoto. Cambia a CLI local.",
                     "none",
                     "",
+                    {"tokens_in": 0, "tokens_out": 0},
                 )
             else:
-                answer, used, cmd = run_engine(
+                answer, used, cmd, usage = run_engine(
                     motor,
                     modelo,
                     effort,
@@ -487,18 +526,31 @@ if prompt:
                     text,
                     memoria,
                     int(catalog.get("timeout_s") or 240),
+                    incidente,
                 )
             status.update(label="Listo", state="complete")
         st.markdown(answer)
         if used:
             st.caption(f"motor: `{used}`")
+        tin_m = int((usage or {}).get("tokens_in") or 0)
+        tout_m = int((usage or {}).get("tokens_out") or 0)
+        if tin_m or tout_m:
+            st.caption(f"tokens: {format_int(tin_m)} in · {format_int(tout_m)} out")
 
     st.session_state.messages.append(
-        {"role": "assistant", "content": answer, "motor": used, "command": cmd}
+        {
+            "role": "assistant",
+            "content": answer,
+            "motor": used,
+            "command": cmd,
+            "tokens_in": int((usage or {}).get("tokens_in") or 0),
+            "tokens_out": int((usage or {}).get("tokens_out") or 0),
+        }
     )
     save_thread(
         st.session_state.chat_id,
         st.session_state.messages,
         st.session_state.conversation_images,
         (proyecto or {}).get("id") or "",
+        st.session_state.get("intake") or "",
     )
