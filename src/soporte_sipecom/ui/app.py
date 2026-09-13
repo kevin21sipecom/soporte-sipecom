@@ -83,7 +83,6 @@ def persist_chat(project_id: str = "") -> None:
         st.session_state.messages,
         st.session_state.conversation_images,
         project_id,
-        st.session_state.get("intake") or "",
     )
 
 
@@ -188,21 +187,17 @@ if "chat_id" not in st.session_state:
     existing = load_index()
     if existing:
         st.session_state.chat_id = existing[0]["id"]
-        msgs, imgs, intake = load_thread(existing[0]["id"])
+        msgs, imgs, _ = load_thread(existing[0]["id"])
         st.session_state.messages = msgs
         st.session_state.conversation_images = imgs
-        st.session_state.intake = intake
     else:
         st.session_state.chat_id = new_id()
         st.session_state.messages = []
         st.session_state.conversation_images = []
-        st.session_state.intake = ""
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "conversation_images" not in st.session_state:
     st.session_state.conversation_images = []
-if "intake" not in st.session_state:
-    st.session_state.intake = ""
 
 with st.sidebar:
     st.subheader("Proyecto")
@@ -248,16 +243,6 @@ with st.sidebar:
         with st.expander(f"Imágenes de esta conversación ({len(conv_imgs)})", expanded=False):
             for p in conv_imgs:
                 st.image(str(p), caption=p.name, width=120)
-
-    st.subheader("Error de la app")
-    st.caption("Pega el texto rojo, el stack o el log. No es el chat: el chat es tu pregunta. Esto ancla la búsqueda en el código.")
-    st.text_area(
-        "Error / log / stack",
-        key="intake",
-        height=120,
-        placeholder="Exception, stack trace, log…",
-        label_visibility="collapsed",
-    )
 
     st.subheader("Modo de ejecución")
     modo = st.segmented_control(
@@ -363,7 +348,6 @@ with st.container(key="sipe_index"):
         st.session_state.messages = []
         st.session_state.conversation_images = []
         st.session_state.jump_to = None
-        st.session_state.intake = ""
         st.rerun()
     seen_ids: set[str] = set()
     for item in load_index()[:24]:
@@ -385,11 +369,10 @@ with st.container(key="sipe_index"):
         ):
             if cid != st.session_state.chat_id:
                 persist_chat(pid)
-                msgs, imgs, intake = load_thread(cid)
+                msgs, imgs, _ = load_thread(cid)
                 st.session_state.chat_id = cid
                 st.session_state.messages = msgs
                 st.session_state.conversation_images = imgs
-                st.session_state.intake = intake
                 st.session_state.jump_to = None
                 st.rerun()
 
@@ -457,9 +440,6 @@ if True:
             if item["role"] == "user":
                 if item.get("content"):
                     st.markdown(item["content"])
-                if (item.get("incidente") or "").strip():
-                    with st.expander("Error pegado", expanded=False):
-                        st.code(item["incidente"][:4000])
                 for path in item.get("adjuntos") or []:
                     p = Path(path)
                     if p.suffix.lower() in IMAGE_EXT and p.is_file():
@@ -477,7 +457,7 @@ if True:
                     st.caption(f"tokens: {format_int(tin_m)} in · {format_int(tout_m)} out")
 
 prompt = st.chat_input(
-    "Escribe un mensaje",
+    "Pregunta, pega el error o adjunta la captura",
     accept_file="multiple",
     file_type=["jpg", "jpeg", "png", "webp", "gif"],
     submit_mode="disable",
@@ -493,14 +473,8 @@ if prompt:
             st.session_state.conversation_images.append(sp)
     memoria = [Path(p) for p in st.session_state.conversation_images if Path(p).is_file()]
 
-    incidente = (st.session_state.get("intake") or "").strip()
     st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": text,
-            "adjuntos": [str(p) for p in adjuntos],
-            "incidente": incidente,
-        }
+        {"role": "user", "content": text, "adjuntos": [str(p) for p in adjuntos]}
     )
     if text:
         st.markdown(text)
@@ -526,7 +500,6 @@ if prompt:
                     text,
                     memoria,
                     int(catalog.get("timeout_s") or 240),
-                    incidente,
                 )
             status.update(label="Listo", state="complete")
         st.markdown(answer)
@@ -552,5 +525,4 @@ if prompt:
         st.session_state.messages,
         st.session_state.conversation_images,
         (proyecto or {}).get("id") or "",
-        st.session_state.get("intake") or "",
     )

@@ -1,6 +1,8 @@
 import unittest
 
-from soporte_sipecom.engine import build_prompt
+from pathlib import Path
+
+from soporte_sipecom.engine import build_prompt, looks_like_error
 from soporte_sipecom.tokens import estimate_tokens, format_int, thread_usage
 
 
@@ -24,8 +26,20 @@ class TokensTests(unittest.TestCase):
 
     def test_incidente_in_prompt(self):
         text = build_prompt({"nombre": "X", "origen": "", "pack": ""}, "por qué falla", [], "NullReferenceException")
-        self.assertIn("Incidente", text)
+        self.assertIn("Error pegado", text)
         self.assertIn("NullReferenceException", text)
+
+    def test_error_in_chat(self):
+        self.assertTrue(looks_like_error("Unhandled Exception at line 12"))
+        self.assertFalse(looks_like_error("Hola"))
+        text = build_prompt({"nombre": "X", "origen": "", "pack": ""}, "Unhandled Exception: boom", [])
+        self.assertIn("captura", text.lower())
+        hola = build_prompt({"nombre": "X", "origen": "", "pack": ""}, "Hola", [])
+        self.assertNotIn("captura de pantalla", hola)
+
+    def test_image_is_error_evidence(self):
+        text = build_prompt({"nombre": "X", "origen": "", "pack": ""}, "qué es esto", [Path("error.png")])
+        self.assertIn("captura", text.lower())
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.7
+
+- El error y la captura van en el chat, no en el lateral.
+
 ## 0.5.6
 
 - Tokens del hilo (estimado) y caja «Error de la app» (log/stack) distinta del chat.
