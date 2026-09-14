@@ -22,6 +22,7 @@ HINTS = {
     "grok": "Instala Grok CLI y autentica (grok login). Binario típico: ~/.grok/bin/grok",
     "antigravity": "Instala Antigravity CLI. Binario: agy",
     "codex": "Instala OpenAI Codex CLI (codex exec debe existir).",
+    "opencode": "Instala OpenCode CLI (opencode). En el dashboard solo salen modelos gratis (coste 0).",
 }
 
 
@@ -146,5 +147,5 @@ def print_onboard() -> int:
             print("Sin instalar. Puedes hacerlo después con los comandos de abajo.\n")
 
     _print_manual(rows)
-    print("El dashboard elige grok / antigravity / codex; no hace falta `select`.")
+    print("El dashboard elige grok / antigravity / codex / opencode; no hace falta `select`.")
     return 1

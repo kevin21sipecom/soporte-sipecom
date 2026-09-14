@@ -159,6 +159,57 @@ def parse_codex_models(text: str) -> list[ModelInfo]:
     return models
 
 
+def _opencode_free(cost) -> bool:
+    if not isinstance(cost, dict):
+        return False
+    try:
+        return float(cost.get("input") or 0) == 0 and float(cost.get("output") or 0) == 0
+    except (TypeError, ValueError):
+        return False
+
+
+def parse_opencode_models(text: str) -> list[ModelInfo]:
+    """Solo modelos con coste 0 en `opencode models --verbose`."""
+    models: list[ModelInfo] = []
+    seen: set[str] = set()
+    lines = (text or "").splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        i += 1
+        if not re.match(r"^[\w.-]+/[\w.+:-]+$", line):
+            continue
+        mid = line
+        data: dict = {}
+        if i < len(lines) and lines[i].strip().startswith("{"):
+            buf = [lines[i]]
+            depth = lines[i].count("{") - lines[i].count("}")
+            i += 1
+            while i < len(lines) and depth > 0:
+                buf.append(lines[i])
+                depth += lines[i].count("{") - lines[i].count("}")
+                i += 1
+            try:
+                parsed = json.loads("\n".join(buf))
+                if isinstance(parsed, dict):
+                    data = parsed
+            except json.JSONDecodeError:
+                data = {}
+        if data:
+            if not _opencode_free(data.get("cost")):
+                continue
+        elif "-free" not in mid.lower():
+            continue
+        if mid in seen:
+            continue
+        seen.add(mid)
+        label = str(data.get("name") or mid).strip()
+        variants = data.get("variants") if isinstance(data.get("variants"), dict) else {}
+        efforts = [str(k) for k in variants.keys()] if variants else []
+        models.append(ModelInfo(id=mid, label=label, default=not models, efforts=efforts))
+    return models
+
+
 def _fetch_models(agent: str) -> list[ModelInfo]:
     path = which(agent)
     if not path:
@@ -178,6 +229,11 @@ def _fetch_models(agent: str) -> list[ModelInfo]:
         if code not in (0, None):
             return []
         return parse_codex_models(out)
+    if agent == "opencode":
+        code, out = run_cmd([path, "models", "--verbose"], timeout=60)
+        if code not in (0, None):
+            return []
+        return parse_opencode_models(out)
     return []
 
 
@@ -211,6 +267,8 @@ def list_efforts(agent: str, model_id: str = "", models: list[ModelInfo] | None 
         return list(GROK_EFFORTS)
     if agent == "codex":
         return ["low", "medium", "high", "xhigh"]
+    if agent == "opencode":
+        return []
     return ["medium"]
 
 

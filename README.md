@@ -1,6 +1,6 @@
 # SIPECOM-SOPORTE
 
-CLI global y consola local para consultar proyectos (CodeGraph + Repomix) con **grok**, **antigravity** o **codex**.
+CLI global y consola local para consultar proyectos (CodeGraph + Repomix) con **grok**, **antigravity**, **codex** u **opencode**.
 
 La UI es **localhost** (`127.0.0.1:2121`). Sin túnel.
 
@@ -49,7 +49,7 @@ Desarrollo local (opcional): `git clone` + `uv sync` + `uv run sipecom-soporte`.
 
 1. **node** y **npm** (Repomix y Archify los necesitan)
 2. **CodeGraph**, **Repomix**, **Archify**
-3. Agentes: grok / antigravity (`agy`) / codex
+3. Agentes: grok / antigravity (`agy`) / codex / opencode
 
 Si falta CodeGraph, Repomix o Archify, pregunta s/n y los instala en el mismo onboarding. Cuando todo está OK:
 

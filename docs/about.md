@@ -13,7 +13,7 @@ El producto:
 1. Indexa el proyecto con **CodeGraph**.
 2. Empaqueta el origen con **Repomix** (el pack se pasa por ruta; no se vuelca al prompt).
 3. Deja un **mapa Archify** cuando hay evidencia para dibujarlo.
-4. Pregunta con **grok**, **antigravity** (`agy`) o **codex**, según lo que el detector encuentre en esta máquina.
+4. Pregunta con **grok**, **antigravity** (`agy`), **codex** u **opencode** (este último, solo modelos gratis).
 5. Recuerda imágenes y el hilo por conversación. «Nueva conversación» empieza otro hilo.
 
 Sipi es el asistente de la consola.

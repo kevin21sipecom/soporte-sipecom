@@ -1,6 +1,6 @@
 import unittest
 
-from soporte_sipecom.models import parse_agy_models, parse_codex_models, parse_grok_models
+from soporte_sipecom.models import parse_agy_models, parse_codex_models, parse_grok_models, parse_opencode_models
 
 
 class ParseModelsTest(unittest.TestCase):
@@ -37,6 +37,30 @@ Available models:
         models = parse_codex_models(text)
         self.assertEqual([m.id for m in models], ["gpt-6-astra"])
         self.assertEqual(models[0].efforts, ["low", "high"])
+
+    def test_opencode_only_free(self):
+        text = """opencode/big-pickle
+{
+  "id": "big-pickle",
+  "name": "Big Pickle",
+  "cost": {"input": 0, "output": 0}
+}
+opencode/gpt-5.4
+{
+  "id": "gpt-5.4",
+  "name": "GPT 5.4",
+  "cost": {"input": 1.25, "output": 10}
+}
+opencode/nemotron-3-ultra-free
+{
+  "id": "nemotron-3-ultra-free",
+  "name": "Nemotron Free",
+  "cost": {"input": 0, "output": 0}
+}
+"""
+        models = parse_opencode_models(text)
+        self.assertEqual([m.id for m in models], ["opencode/big-pickle", "opencode/nemotron-3-ultra-free"])
+        self.assertTrue(models[0].default)
 
 
 if __name__ == "__main__":

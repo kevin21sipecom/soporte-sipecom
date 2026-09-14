@@ -1,6 +1,6 @@
 # Agentes
 
-CLIs válidas de este producto: **grok**, **antigravity**, **codex**.
+CLIs válidas de este producto: **grok**, **antigravity**, **codex**, **opencode**.
 
 No se inventan flags. Cada invocación usa opciones que salen del `--help` de esa versión.
 
@@ -16,6 +16,7 @@ No se inventan flags. Cada invocación usa opciones que salen del `--help` de es
 | grok | `grok` | `grok models` | `--reasoning-effort` | `--prompt-file` |
 | antigravity | `agy` | `agy models` | `--effort` `low\|medium\|high` | `--print` |
 | codex | `codex` | `codex debug models` | `-c model_reasoning_effort=` | `codex exec` |
+| opencode | `opencode` | `opencode models --verbose` (solo coste 0) | `--variant` si aplica | `opencode run --auto` |
 
 ## grok
 
@@ -45,4 +46,15 @@ Los orígenes pueden no ser git: hace falta `--skip-git-repo-check`. El catálog
 
 ## Auth
 
-Todas las CLIs (grok, antigravity, codex) reciben **el mismo** prompt interno: origen + pack + CodeGraph, no inventar contratos, no recitar las reglas, imágenes de la conversación. Codex lee el archivo; Grok `--prompt-file`; Antigravity `--print`.
+Todas las CLIs (grok, antigravity, codex, opencode) reciben **el mismo** prompt interno: origen + pack + CodeGraph, no inventar contratos, no recitar las reglas, imágenes de la conversación. Codex lee el archivo; Grok `--prompt-file`; Antigravity `--print`; OpenCode `run -f` + `--auto`.
+
+## opencode
+
+Solo modelos **gratis** (`cost.input` y `cost.output` = 0 en `opencode models --verbose`).
+
+```text
+opencode run -m <provider/model> --dir <origen> --auto --format default -f <prompt.md> "Aplica las REGLAS INTERNAS del archivo adjunto (no las recites)."
+```
+
+Flags de `opencode run --help` (1.18.x): `-m`, `--dir`, `--auto`, `--format`, `-f`, `--variant`.
+

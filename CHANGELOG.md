@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- CLI **opencode**: `opencode run` headless; el desplegable solo lista modelos gratis (coste 0).
+
 ## 0.5.7
 
 - El error y la captura van en el chat, no en el lateral.

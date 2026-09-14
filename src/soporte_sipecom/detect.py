@@ -56,6 +56,7 @@ def _which_one(name: str) -> str | None:
     exe = f"{name}.exe" if WIN else name
     extra = [
         _home() / ".grok" / "bin" / exe,
+        _home() / ".bun" / "bin" / exe,
         _home() / "AppData" / "Local" / "Programs" / "OpenAI" / "Codex" / "bin" / exe,
         _localappdata() / "agy" / "bin" / exe,
         _localappdata() / "codegraph" / "current" / "bin" / exe,
@@ -94,6 +95,9 @@ def agent_binary(name: str) -> str | None:
     if name == "codex":
         path = _which_one("codex")
         return path if path and Path(path).stem.lower() == "codex" else None
+    if name == "opencode":
+        path = _which_one("opencode")
+        return path if path and Path(path).stem.lower() == "opencode" else None
     return which(name)
 
 
@@ -327,6 +331,12 @@ def probe_agent(name: str) -> Probe:
         extra["models_cmd"] = "models" in hout.lower()
         if not headless:
             detail = "falta --print/--model (headless)"
+    elif name == "opencode":
+        hcode, hout = run_cmd([path, "run", "--help"], timeout=8)
+        headless = "--model" in hout and "--auto" in hout
+        extra["run_help"] = hcode == 0
+        if not headless:
+            detail = "falta `opencode run --model --auto`"
     ok = code == 0 or (version is not None and "error" not in (version or "").lower())
     # grok --version can work while unauthenticated
     if name == "grok" and extra.get("auth") == "missing":
@@ -355,7 +365,7 @@ def doctor() -> list[Probe]:
         "agent",
         found=any(p.found for p in agents),
         ok=any_agent,
-        detail="al menos un CLI headless (grok/antigravity/codex)"
+        detail="al menos un CLI headless (grok/antigravity/codex/opencode)"
         if any_agent
         else "ningún agente headless usable",
         extra={"members": [p.as_dict() for p in agents]},
