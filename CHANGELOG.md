@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+- Borrar este hilo o empezar de cero (borra conversaciones en disco).
+
 ## 0.6.1
 
 - OpenCode: `--file=` y `--` para que el mensaje no se tome como ruta.

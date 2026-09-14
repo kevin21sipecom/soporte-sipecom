@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import time
 from pathlib import Path
 
@@ -87,3 +88,29 @@ def save_thread(
 
 def new_id() -> str:
     return str(int(time.time() * 1000))
+
+
+def delete_thread(cid: str) -> None:
+    cid = str(cid or "")
+    if not cid:
+        return
+    save_index([x for x in load_index() if str(x.get("id") or "") != cid])
+    path = chats_root() / cid
+    if path.is_dir():
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def delete_all_threads() -> None:
+    root = chats_root()
+    save_index([])
+    if not root.is_dir():
+        return
+    for child in list(root.iterdir()):
+        if child.is_dir():
+            shutil.rmtree(child, ignore_errors=True)
+        elif child.name != "index.json":
+            try:
+                child.unlink()
+            except OSError:
+                pass
+    save_index([])

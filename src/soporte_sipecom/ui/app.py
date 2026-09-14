@@ -10,7 +10,15 @@ import streamlit as st
 import yaml
 
 from soporte_sipecom.config import DEFAULT_PORT, load as load_cfg, save as save_cfg
-from soporte_sipecom.conversations import load_index, load_thread, new_id, save_thread, thread_dir
+from soporte_sipecom.conversations import (
+    delete_all_threads,
+    delete_thread,
+    load_index,
+    load_thread,
+    new_id,
+    save_thread,
+    thread_dir,
+)
 from soporte_sipecom.ingest import add_project, load_catalog, save_catalog
 from soporte_sipecom.onboard import detected_agents
 from soporte_sipecom.tokens import format_int, thread_usage
@@ -397,6 +405,23 @@ if True:
         f"(entrada {format_int(tin)} · salida {format_int(tout)}). "
         "Estimado · 4 caracteres ≈ 1 token. CLI local: no es factura de API."
     )
+    del_a, del_b, _ = st.columns([1.2, 1.2, 3])
+    with del_a:
+        if st.button("Borrar este hilo", key="del_thread"):
+            delete_thread(st.session_state.chat_id)
+            st.session_state.chat_id = new_id()
+            st.session_state.messages = []
+            st.session_state.conversation_images = []
+            st.session_state.jump_to = None
+            st.rerun()
+    with del_b:
+        if st.button("Empezar de cero", key="del_all"):
+            delete_all_threads()
+            st.session_state.chat_id = new_id()
+            st.session_state.messages = []
+            st.session_state.conversation_images = []
+            st.session_state.jump_to = None
+            st.rerun()
 
     if vista == "Mapa":
         st.subheader("Mapa")
