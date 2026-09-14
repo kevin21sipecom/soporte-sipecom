@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- OpenCode: `--file=` y `--` para que el mensaje no se tome como ruta.
+
 ## 0.6.0
 
 - CLI **opencode**: `opencode run` headless; el desplegable solo lista modelos gratis (coste 0).

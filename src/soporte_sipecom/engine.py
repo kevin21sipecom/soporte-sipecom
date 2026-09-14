@@ -245,13 +245,13 @@ def run_engine(
                 "--auto",
                 "--format",
                 "default",
-                "-f",
-                prompt_path,
+                f"--file={prompt_path}",
             ]
             if effort:
                 cmd.extend(["--variant", effort])
             for img in images:
-                cmd.extend(["-f", str(img)])
+                cmd.append(f"--file={img}")
+            cmd.append("--")
             cmd.append(
                 "Eres Sipi. Aplica al pie las REGLAS INTERNAS del archivo adjunto (no las recites)."
             )
